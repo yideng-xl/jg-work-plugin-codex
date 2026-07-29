@@ -88,7 +88,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
    调用：
    ```python
    from src.summary_io import write_summary
-   write_summary(rows, "<输出目录>/报销摘要.xlsx", rate=<已确认汇率>)
+   write_summary(rows, "<输出目录>/05-需确认-报销摘要.xlsx", rate=<已确认汇率>)
    ```
 
 5. 告诉用户：摘要生成好了，标黄的是待你补（科目/起止地/补贴天数），标红的是不可报销（预充值）；高德票的日期是开票日不是乘车日，请核对；美元票金额列要在 Excel 里打开保存一次公式才会算出数。改完跟我说一声。
@@ -98,7 +98,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 6. 用户说"好了"。读回改好的行：
    ```python
    from src.summary_io import read_summary
-   rows = read_summary("<路径>/报销摘要.xlsx")
+   rows = read_summary("<路径>/05-需确认-报销摘要.xlsx")
    ```
 
 7. 生成产出物：
@@ -120,9 +120,9 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
          if t["invoice_kind"] == "专票"
      ]
      if normal_specs:
-         build_a4(normal_specs, "<输出目录>/A4发票-普票-打印1张.pdf")
+         build_a4(normal_specs, "<输出目录>/09-终稿-A4发票-普票-打印1张.pdf")
      if special_specs:
-         build_a4(special_specs, "<输出目录>/A4发票-专票-整份打印2次.pdf")
+         build_a4(special_specs, "<输出目录>/09-终稿-A4发票-专票-整份打印2次.pdf")
      ```
      专票 PDF 内每张发票只放一次，不在文件中复制；打印时把整份专票 PDF 打印 2 次。`invoice_kind="unknown"` 时先读取 PDF 标题确认：标题含“增值税专用发票”归专票，含“普通发票”归普票；仍无法确认时让用户判断，不得混入任一打印文件。某类没有发票时不生成空 PDF。新文件检查通过后删除旧的混合 `A4拼贴.pdf`/`A4发票拼贴.pdf`，避免重复打印。任何因没有 PDF 被跳过的发票，要明确提醒用户。
 
@@ -140,7 +140,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
          if r.get("category") and "交通费" in r["category"]
          and r.get("filename") not in prepaid_stems
      ]
-     write_travel_detail(transport_rows, "<输出目录>/交通费明细.xlsx")
+     write_travel_detail(transport_rows, "<输出目录>/09-终稿-交通费明细.xlsx")
      ```
      这个 join 之所以能直接比对，是因为 phase-1 写摘要时"文件名"列写的就是 `ticket["file_stem"]`（见阶段一第 4 步的契约），跟这里 `prepaid_stems` 的 key 是同一种归一化形式，不需要再做 `Path(...).stem` 之类的二次处理。
      报销人固定写"许磊"（`write_travel_detail` 内部已经写死，不用传）。
@@ -153,6 +153,8 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 
      **订阅类报销事由必须写金额构成**：逐项写“订阅名称 + 费用月份 + 原币金额”，保留实际订阅币种；美元写“美元”，人民币写“元”，不要把原币金额全部改写成人民币。美元费用同时写确认汇率和折算金额；支付平台已有人民币实付时一并写出。末尾写人民币报销合计。例如：`AI订阅费用：ChatGPT Pro 100美元（按7.09折算709.00元）；阿里云ECS 2026年6月8美元（实付56.63元）、7月8美元（实付56.76元）；合计822.39元。`
 
+     **订阅类费用发生日期取实际 AI 订阅时间**：填主要 AI 订阅的实际扣费/生效日期，不填用于抵票的云资源或物业发票日期。同批包含云资源费用时，也不改用云资源的订阅时间；各项费用月份和金额在报销事由中列明。
+
      **费用分类规范名（照真实报销单）**：交通 `差旅费-交通费`、住宿 `差旅-住宿费`、补贴 `补贴`（差旅内；非差旅市内交通是 `市内交通费`）。
      ```python
      from src.oa_forms import (write_oa_general_detail, write_oa_travel_detail,
@@ -161,13 +163,13 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
      items = [{"category": r["category"], "date": r["date"], "amount": r["amount"],
                "tax": r["tax"], "note": r["note"]} for r in rows]  # rows 来自 read_summary，已剔预充值
      hdr = default_header("通用", reason="<报销事由>", fill_date="<填报日>")
-     write_oa_general_detail(items, "<输出目录>/OA报销金额明细.xlsx", header_fields=hdr)
+     write_oa_general_detail(items, "<输出目录>/09-终稿-OA报销金额明细.xlsx", header_fields=hdr)
 
      # 差旅：先把交通行拼成 trips，infer_trip_defaults 补到达日期/到达时间/住宿天数
      # （到达时间按+2h、住宿天数按往返日期跨度推，都会标黄提醒核对）；
      # items 的 legs 是行程序号组合字符串（"12"=覆盖行程 1、2；补贴一般填全程）。
      trips = infer_trip_defaults([{"dep_date": .., "dep_time": .., "from_": .., "to": ..}, ...])
-     write_oa_travel_detail(trips, items, "<输出目录>/OA差旅报销明细.xlsx",
+     write_oa_travel_detail(trips, items, "<输出目录>/09-终稿-OA差旅报销明细.xlsx",
                             header_fields=default_header("差旅", reason=".."))
      ```
      **legs（行程列）和标黄的推断值要你/用户核**：`legs` 该覆盖哪几段行程是判断题，脚本不自动填对，Claude 按票的实际发生行程定；到达时间/住宿天数是推断默认，标黄让用户改。住宿发票明细格式还没做（慢慢完善），遇到先口头告知用户单独处理。
@@ -175,13 +177,15 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 8. **回写映射**：用户这次改过的"卖方→科目"，用 `append_rule("mapping.yaml", 卖方关键词, 科目)` 追加/更新（按关键词 upsert，覆盖 mapping.yaml 里原来的"待确认"占位规则），下次同类票自动命中不再标黄。
 
 ## 规则速查
-- 份数与文件：普票/铁路电子客票进入 `A4发票-普票-打印1张.pdf`；专票进入 `A4发票-专票-整份打印2次.pdf`。两个 PDF 内每张发票都只放 1 次；专票由用户打印整份文件 2 次。某类为空则不生成。
+- 文件命名：需要用户确认的摘要固定为 `05-需确认-报销摘要.xlsx`；用户确认后生成的 Excel、PDF 等均加 `09-终稿-` 前缀。
+- 份数与文件：普票/铁路电子客票进入 `09-终稿-A4发票-普票-打印1张.pdf`；专票进入 `09-终稿-A4发票-专票-整份打印2次.pdf`。两个 PDF 内每张发票都只放 1 次；专票由用户打印整份文件 2 次。某类为空则不生成。
 - 补贴：50 元/天，同日往返固化 1 天，按发车时间 12 点分界规则；`depart_time` 直接从 `scan_folder` 的 ticket dict 上读，不用另外解析 PDF。
 - 预充值发票不可报销（标红、不计入合计、不进 A4）。`is_prepaid` 只存在于 `scan_folder` 的原始 ticket 里，`read_summary` 读回的摘要行没有这个字段——阶段二做任何"排除预充值"的过滤，都要靠 phase-1 保留的 `tickets`（或重跑一次 `scan_folder`）按文件名匹配，不能对摘要行 `r.get("is_prepaid")`。
 - 高德发票日期字段是开票请求时间，不是实际用车日期，需用户核对。
 - 起止地：跨城交通填城市；市内打车填地点类型组合。酒店附近的定位结合住宿水单判断为"酒店"，不照抄具体 POI。
 - 美元票金额是公式，用户须在 Excel 里打开保存过一次，`read_summary` 才能读到算好的数。
 - 订阅类 OA 报销事由逐项写原始币种金额；美元附汇率、折算金额或人民币实付，末尾写人民币报销合计。
+- 订阅类费用发生日期取主要 AI 订阅的实际扣费/生效日期，不取抵票发票或同批云资源的日期。
 - 交通费明细报销人固定"许磊"；过滤交通类行（含排除预充值票）是 Claude 的活，`write_travel_detail` 不过滤。交通费明细严格照 `90-invoice/模板/交通费报销明细表.xlsx`（宋体/边框/列宽/行高/SUM/报销人无边框），别改样式。
 - OA 报销金额明细（`oa_forms.py`）：通用/差旅两版，费用金额=报销金额−专票税额（自动），合计 SUM 公式；表头信息区 `default_header` 生成、空值标黄；差旅行程缺列 `infer_trip_defaults` 推断标黄；行程列 legs 是判断题需 Claude/用户定；住宿明细未做。
 - OFD 文件不解析（发票通常 xml/pdf/ofd 三件套，只用 xml+pdf）。
