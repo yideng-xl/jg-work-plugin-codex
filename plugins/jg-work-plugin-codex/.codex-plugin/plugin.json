@@ -1,6 +1,6 @@
 {
   "name": "jg-work-plugin-codex",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260729054525",
   "description": "JG 工作报销插件，整理发票并生成报销摘要、OA 明细和分类打印附件。",
   "author": {
     "name": "yideng-xl",
@@ -14,7 +14,9 @@
     "longDescription": "扫描差旅、订阅和其他报销材料，生成报销摘要、OA 明细，并按普票与专票拆分 A4 打印附件。",
     "developerName": "yideng-xl",
     "category": "Productivity",
-    "capabilities": ["Write"],
+    "capabilities": [
+      "Write"
+    ],
     "defaultPrompt": [
       "帮我整理这次报销，核对金额并生成报销材料。",
       "把普票和专票分开生成打印 PDF。",
