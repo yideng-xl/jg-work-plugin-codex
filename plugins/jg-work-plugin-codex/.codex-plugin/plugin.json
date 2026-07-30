@@ -1,6 +1,6 @@
 {
   "name": "jg-work-plugin-codex",
-  "version": "0.1.0+codex.20260730020520",
+  "version": "0.1.0+codex.20260730021632",
   "description": "JG 工作报销插件，整理发票并生成报销摘要、OA 明细和分类打印附件。",
   "author": {
     "name": "yideng-xl",
