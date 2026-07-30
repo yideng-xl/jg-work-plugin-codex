@@ -29,7 +29,7 @@ from src.summary_io import _THIN, _BORDER_ALL, _CENTER, _HCENTER, YELLOW
 
 _LEFT = Alignment(horizontal="left", vertical="center")
 
-# 许磊的固定表头值（两张真实 OA 单都是这三个，预填省得每次标黄手补）
+# 当前模板的组织字段默认值。申请人不在这里固定，必须由本次报销信息传入。
 _FIXED = {"费用大区": "公共", "费用部门": "产品部", "费用地区": "总部"}
 
 _F_TITLE = Font(name="宋体", size=18, bold=True)
@@ -378,16 +378,19 @@ def _inject_totals(header_rows, items):
     return out
 
 
-def default_header(kind: str, reason: str = "", applicant: str = "许磊",
+def default_header(kind: str, reason: str = "", applicant: str | None = None,
                    fill_date: str = "", title: str = "", doc_no: str = "") -> list:
     """OA 表头，照真实「技术报销」表单的字段顺序与双列布局。kind: "通用"/"差旅"。
     返回「行」列表：每行 1~2 组 (标签, 值)；单组行整行铺满（报销事由/通用的附件）。
     固定值（费用大区/部门/地区）预填，报销总金额/专票税额合计/费用合计 写表时自动算，
     其余留空写表时标黄。"""
+    if not applicant or not applicant.strip():
+        raise ValueError("必须传入本次报销的实际申请人")
+
     f = _FIXED
     rows = [
         [("标题", title), ("报销单号", doc_no)],
-        [("申请人", applicant), ("填报日期", fill_date)],
+        [("申请人", applicant.strip()), ("填报日期", fill_date)],
         [("费用大区", f["费用大区"]), ("费用部门", f["费用部门"])],
         [("报销类型", kind), ("费用地区", f["费用地区"])],
         [("报销分类", ""), ("销售合同", "")],

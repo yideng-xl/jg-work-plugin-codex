@@ -102,11 +102,14 @@ def read_summary(path: str) -> list:
     return rows
 
 
-def write_travel_detail(rows: list, out_path: str):
+def write_travel_detail(rows: list, out_path: str, applicant: str | None = None):
     """严格照抄 90-invoice/模板/交通费报销明细表.xlsx：宋体、边框、列宽、
     行高、合计公式、报销人无边框，都跟模板一致。data 行数按传入 rows 动态。
     列映射：日期←date / 出发地←from_ / 目的地←to / 金额←amount / 打车原因←reason。
     过滤（交通类、剔预充值）由调用方做，本函数原样写入。"""
+    if not applicant or not applicant.strip():
+        raise ValueError("必须传入本次报销的实际报销人")
+
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "交通费明细"
@@ -166,7 +169,7 @@ def write_travel_detail(rows: list, out_path: str):
 
     # 报销人行（无边框，宋体 11，垂直居中）
     d_sign = ws.cell(row=signer_row, column=4, value="报销人：")
-    e_sign = ws.cell(row=signer_row, column=5, value="许磊")
+    e_sign = ws.cell(row=signer_row, column=5, value=applicant.strip())
     for cell in (d_sign, e_sign):
         cell.font = Font(name="宋体", size=11)
         cell.alignment = _VCENTER

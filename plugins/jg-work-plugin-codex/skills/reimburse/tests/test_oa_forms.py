@@ -59,18 +59,25 @@ def test_general_detail_aggregates(tmp_path):
 def test_general_detail_with_header_block(tmp_path):
     items = [{"category": "会议费", "date": "2026-05-01", "amount": 100.0,
               "tax": None, "note": ""}]
-    fields = default_header("通用", reason="claude 订阅", fill_date="2026-07-09")
+    fields = default_header("通用", reason="claude 订阅", applicant="张三",
+                            fill_date="2026-07-09")
     out = tmp_path / "带表头.xlsx"
     write_oa_general_detail(items, str(out), header_fields=fields)
     ws = openpyxl.load_workbook(str(out)).active
     # 表头区把明细往下推：第 1 行大标题，之后是表头信息区
     flat = [c.value for row in ws.iter_rows() for c in row if c.value is not None]
-    assert "申请人" in flat and "许磊" in flat
+    assert "申请人" in flat and "张三" in flat
     assert "报销类型" in flat and "通用" in flat
     assert "claude 订阅" in flat
     # 明细表头仍然存在（被推到更下面）
     assert any([ws.cell(row=r, column=c).value for c in range(1, 8)][:2]
                == ["序号", "费用分类"] for r in range(1, ws.max_row + 1))
+
+
+def test_default_header_requires_applicant():
+    import pytest
+    with pytest.raises(ValueError, match="实际申请人"):
+        default_header("通用")
 
 
 def test_travel_detail_two_tables(tmp_path):
@@ -128,7 +135,7 @@ def _flatten(rows):
 def test_inject_totals_fills_header():
     items = [{"amount": 981.65, "tax": None}, {"amount": 577.12, "tax": 32.67},
              {"amount": 125.0, "tax": 0.0}]
-    rows = default_header("差旅", reason="郑州集中办公")
+    rows = default_header("差旅", reason="郑州集中办公", applicant="张三")
     filled = _flatten(_inject_totals(rows, items))
     assert filled["报销总金额"] == 1683.77       # Σ报销金额
     assert filled["增值税专票税额合计"] == 32.67   # Σ专票税额
@@ -153,7 +160,7 @@ def test_infer_uncertain_cells_highlighted_yellow(tmp_path):
 
 
 def test_default_header_travel_has_extra_fields():
-    rows = default_header("差旅", reason="宁波出差")
+    rows = default_header("差旅", reason="宁波出差", applicant="张三")
     flat = _flatten(rows)
     assert "出差天数" in flat and "实际工作天数" in flat
     assert "出差申请记录" in flat and "附件" in flat
@@ -164,7 +171,7 @@ def test_default_header_travel_has_extra_fields():
 
 
 def test_default_header_general_has_attachment_fullwidth():
-    rows = default_header("通用", reason="抵票")
+    rows = default_header("通用", reason="抵票", applicant="张三")
     assert any(len(p) == 1 and p[0][0] == "附件" for p in rows)   # 通用附件整行
     flat = _flatten(rows)
     assert "出差天数" not in flat               # 通用无差旅字段

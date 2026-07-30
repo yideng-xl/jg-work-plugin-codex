@@ -143,7 +143,7 @@ def test_write_travel_detail(tmp_path):
          "amount": 24.29, "reason": "无直达交通"},
     ]
     out = tmp_path / "交通费明细.xlsx"
-    write_travel_detail(rows, str(out))
+    write_travel_detail(rows, str(out), applicant="张三")
     import openpyxl
     ws = openpyxl.load_workbook(str(out)).active
     assert ws.title == "交通费明细"
@@ -158,7 +158,7 @@ def test_write_travel_detail(tmp_path):
     assert ws["D5"].value == "=SUM(D3:D4)"
     # 报销人行在合计下空一行（第 7 行），无边框
     assert ws["D7"].value == "报销人："
-    assert ws["E7"].value == "许磊"
+    assert ws["E7"].value == "张三"
     assert ws["D7"].border.bottom.style is None
 
     # 模板样式保真：宋体、字号、边框、合并、列宽
@@ -171,3 +171,9 @@ def test_write_travel_detail(tmp_path):
     assert ws["A5"].border.top.style == "thin"   # 合计有网格线
     assert round(ws.column_dimensions["B"].width, 2) == 22.34
     assert round(ws.row_dimensions[1].height, 2) == 51.75
+
+
+def test_write_travel_detail_requires_applicant(tmp_path):
+    out = tmp_path / "交通费明细.xlsx"
+    with pytest.raises(ValueError, match="实际报销人"):
+        write_travel_detail([], str(out))

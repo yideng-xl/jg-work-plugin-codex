@@ -14,10 +14,11 @@ description: 上海巨耕报销自动化。用户说"搞报销/报销/整理发�
 2. 明确本次属于“差旅”还是“通用”：
    - 差旅：跨城出行，可能包含火车、飞机、住宿、出差期间打车和补贴。
    - 通用：AI 订阅、市内交通、办公费用等不需要填写差旅行程的报销。
-3. 扫描文件夹并核对票据，只生成中间表 `05-需确认-报销摘要.xlsx`。
-4. 等用户检查、修改并明确确认。未确认前禁止生成 OA 明细、交通费明细和 A4 发票 PDF。
-5. 读回用户确认后的摘要，生成全部 `09-终稿-` 文件。
-6. 最后核对金额、票种、文件数量和命名，再交付用户。
+3. 确认本次实际报销人。报销人不得固定成某个姓名，也不得从历史文件猜测。
+4. 扫描文件夹并核对票据，只生成中间表 `05-需确认-报销摘要.xlsx`。
+5. 等用户检查、修改并明确确认。未确认前禁止生成 OA 明细、交通费明细和 A4 发票 PDF。
+6. 读回用户确认后的摘要，传入本次实际报销人，生成全部 `09-终稿-` 文件。
+7. 最后核对金额、票种、报销人、文件数量和命名，再交付用户。
 
 ## 环境
 脚本在 skill 自带 venv 跑：`~/.claude/skills/reimburse/.venv/bin/python`。
@@ -151,16 +152,20 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
          if r.get("category") and "交通费" in r["category"]
          and r.get("filename") not in prepaid_stems
      ]
-     write_travel_detail(transport_rows, "<输出目录>/09-终稿-交通费明细.xlsx")
+     write_travel_detail(
+         transport_rows,
+         "<输出目录>/09-终稿-交通费明细.xlsx",
+         applicant="<本次实际报销人>",
+     )
      ```
      这个 join 之所以能直接比对，是因为 phase-1 写摘要时"文件名"列写的就是 `ticket["file_stem"]`（见阶段一第 4 步的契约），跟这里 `prepaid_stems` 的 key 是同一种归一化形式，不需要再做 `Path(...).stem` 之类的二次处理。
-     报销人固定写"许磊"（`write_travel_detail` 内部已经写死，不用传）。
+     报销人必须使用本次实际报销人的姓名。`write_travel_detail` 强制要求传入 `applicant`；没有确认姓名时停止生成，不得沿用历史报销人的名字。
 
    - **OA 报销金额明细 Excel（照泛微 OA「技术报销」表单，方便照着填 OA、也给二期插件当数据源）**：`src/oa_forms.py`。通用场景出通用版、差旅场景出差旅版。
 
      **别弄混两类明细**：OA 的「报销费用明细」是**一个费用分类一行**（同类发票合计成一行，逐票明细在交通费明细表/A4 发票拼贴那边）；而交通费明细表（`write_travel_detail`）是**一票/一段行程一行**。两个 writer 分工不同。`write_oa_general_detail`/`write_oa_travel_detail` 默认 `aggregate=True`，内部按费用分类聚合，所以你把 `read_summary` 的逐票行原样传进去就行，不用自己先合并。
 
-     表头信息区用 `default_header(kind, reason, fill_date, title, doc_no)` 生成（`kind` 传 `"通用"`/`"差旅"`；已知项填默认如 申请人=许磊/报销类型，其余留空写表时标黄让用户补）。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。费用金额列自动 = 报销金额 − 专票税额。合计行是 SUM 公式。
+     表头信息区用 `default_header(kind, reason, applicant, fill_date, title, doc_no)` 生成（`kind` 传 `"通用"`/`"差旅"`；`applicant` 必须传本次实际报销人，不能使用固定姓名；其余未知项留空，写表时标黄让用户补）。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。费用金额列自动 = 报销金额 − 专票税额。合计行是 SUM 公式。
 
      **订阅类报销事由必须写金额构成**：逐项写“订阅名称 + 费用月份 + 原币金额”，保留实际订阅币种；美元写“美元”，人民币写“元”，不要把原币金额全部改写成人民币。美元费用同时写确认汇率和折算金额；支付平台已有人民币实付时一并写出。末尾写人民币报销合计。例如：`AI订阅费用：ChatGPT Pro 100美元（按7.09折算709.00元）；阿里云ECS 2026年6月8美元（实付56.63元）、7月8美元（实付56.76元）；合计822.39元。`
 
@@ -173,7 +178,12 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
      # 通用（如抵票/市内交通）
      items = [{"category": r["category"], "date": r["date"], "amount": r["amount"],
                "tax": r["tax"], "note": r["note"]} for r in rows]  # rows 来自 read_summary，已剔预充值
-     hdr = default_header("通用", reason="<报销事由>", fill_date="<填报日>")
+     hdr = default_header(
+         "通用",
+         reason="<报销事由>",
+         applicant="<本次实际报销人>",
+         fill_date="<填报日>",
+     )
      write_oa_general_detail(items, "<输出目录>/09-终稿-OA报销金额明细.xlsx", header_fields=hdr)
 
      # 差旅：先把交通行拼成 trips，infer_trip_defaults 补到达日期/到达时间/住宿天数
@@ -181,7 +191,11 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
      # items 的 legs 是行程序号组合字符串（"12"=覆盖行程 1、2；补贴一般填全程）。
      trips = infer_trip_defaults([{"dep_date": .., "dep_time": .., "from_": .., "to": ..}, ...])
      write_oa_travel_detail(trips, items, "<输出目录>/09-终稿-OA差旅报销明细.xlsx",
-                            header_fields=default_header("差旅", reason=".."))
+                            header_fields=default_header(
+                                "差旅",
+                                reason="..",
+                                applicant="<本次实际报销人>",
+                            ))
      ```
      **legs（行程列）和标黄的推断值要你/用户核**：`legs` 该覆盖哪几段行程是判断题，脚本不自动填对，Claude 按票的实际发生行程定；到达时间/住宿天数是推断默认，标黄让用户改。住宿发票明细格式还没做（慢慢完善），遇到先口头告知用户单独处理。
 
@@ -197,6 +211,6 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 - 美元票金额是公式，用户须在 Excel 里打开保存过一次，`read_summary` 才能读到算好的数。
 - 订阅类 OA 报销事由逐项写原始币种金额；美元附汇率、折算金额或人民币实付，末尾写人民币报销合计。
 - 订阅类费用发生日期取主要 AI 订阅的实际扣费/生效日期，不取抵票发票或同批云资源的日期。
-- 交通费明细报销人固定"许磊"；过滤交通类行（含排除预充值票）是 Claude 的活，`write_travel_detail` 不过滤。交通费明细严格照 `90-invoice/模板/交通费报销明细表.xlsx`（宋体/边框/列宽/行高/SUM/报销人无边框），别改样式。
+- 交通费明细和 OA 表头必须写本次实际报销人。生成函数强制传入 `applicant`；姓名未确认时停止生成。过滤交通类行（含排除预充值票）是 Claude 的活，`write_travel_detail` 不过滤。交通费明细严格照 `90-invoice/模板/交通费报销明细表.xlsx`（宋体/边框/列宽/行高/SUM/报销人无边框），别改样式。
 - OA 报销金额明细（`oa_forms.py`）：通用/差旅两版，费用金额=报销金额−专票税额（自动），合计 SUM 公式；表头信息区 `default_header` 生成、空值标黄；差旅行程缺列 `infer_trip_defaults` 推断标黄；行程列 legs 是判断题需 Claude/用户定；住宿明细未做。
 - OFD 文件不解析（发票通常 xml/pdf/ofd 三件套，只用 xml+pdf）。
