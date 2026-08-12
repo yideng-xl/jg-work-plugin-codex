@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="报销材料整理和终稿生成操作手册">
+  <title>整理票据并生成终稿｜报销操作手册</title>
+  <link rel="stylesheet" href="styles.css?v=lightbox-1">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="返回顶部"><span>01</span> 报销材料整理</a>
+    <nav aria-label="页面导航">
+      <a href="#prepare">准备</a>
+      <a href="#tell">发起</a>
+      <a href="#confirm">确认</a>
+      <a href="#outputs">终稿</a>
+    </nav>
+  </header>
+
+  <div class="stage-switch" aria-label="报销流程阶段">
+    <a class="active" href="prepare.html"><span>第一步</span>整理票据并生成终稿</a>
+    <a href="index.html"><span>第二步</span>插件填入 OA</a>
+  </div>
+
+  <main id="top">
+    <section class="hero prepare-hero">
+      <div>
+        <p class="eyebrow">第一步 · 报销材料整理</p>
+        <h1><span class="nowrap">准备票据　确认摘要</span><br>生成报销终稿</h1>
+        <p class="lead">你负责提供材料和确认内容。我先生成一份可修改的摘要，等你确认后再生成 OA 明细、打印 PDF 等终稿。</p>
+        <div class="actions">
+          <a class="button primary" href="#prepare">开始准备</a>
+          <a class="button secondary" href="index.html">前往第二步</a>
+        </div>
+      </div>
+      <aside class="scope-card" aria-label="两段式流程">
+        <h2>先确认，再生成终稿</h2>
+        <code>05-需确认-报销摘要.xlsx</code>
+        <p class="arrow-line">你修改并明确确认</p>
+        <code>09-终稿-*.xlsx / *.pdf</code>
+        <p>未确认摘要前，不生成终稿。</p>
+      </aside>
+    </section>
+
+    <section id="prepare" class="section">
+      <div class="section-heading">
+        <p class="step-label">01</p>
+        <div><h2>准备一个报销文件夹</h2><p>把本次报销的原始材料放在同一个文件夹中。</p></div>
+      </div>
+      <div class="choice-grid source-types">
+        <article><h3>发票材料</h3><p>电子发票 PDF/XML、发票压缩包、铁路电子客票等。</p></article>
+        <article><h3>业务附件</h3><p>行程单、住宿水单、订阅回执、费用明细等。</p></article>
+        <article><h3>支付凭证</h3><p>付款截图、银行卡扣款记录或其他金额依据。</p></article>
+      </div>
+      <div class="rule-card prepare-rule">
+        <h3>差旅和其他报销分开</h3>
+        <p>跨城出行、住宿、出差期间交通和补贴归入差旅。AI 订阅、市内交通、办公费用等不需要行程的费用归入其他报销。</p>
+      </div>
+      <figure class="manual-shot folder-shot"><img src="images/10-source-folder.png" alt="报销文件夹中的原始票据材料"><figcaption>示例：同一个文件夹中放入本次报销的发票和附件。</figcaption></figure>
+    </section>
+
+    <section id="tell" class="section alt">
+      <div class="section-heading">
+        <p class="step-label">02</p>
+        <div><h2>在 Codex 中发起报销</h2><p>说清报销类型、材料文件夹和本次实际报销人。</p></div>
+      </div>
+      <div class="prompt-grid">
+        <article class="prompt-card">
+          <p class="prompt-label">差旅报销</p>
+          <p>帮我处理差旅报销，材料在这个文件夹：<code>文件夹路径</code>，报销人是<code>实际报销人姓名</code>。</p>
+        </article>
+        <article class="prompt-card">
+          <p class="prompt-label">其他报销</p>
+          <p>帮我处理其他报销，材料在这个文件夹：<code>文件夹路径</code>，报销人是<code>实际报销人姓名</code>。</p>
+        </article>
+      </div>
+      <p class="muted-note">如果没有说报销类型或报销人，我会先询问，确认后再处理。</p>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <p class="step-label">03</p>
+        <div><h2>我先核对材料</h2><p>我会读取票据和附件，核对金额、税额、票种、费用分类及日期。</p></div>
+      </div>
+      <div class="flow-grid">
+        <article><b>1</b><h3>扫描材料</h3><p>识别发票、行程、住宿、支付凭证等文件。</p></article>
+        <article><b>2</b><h3>整理明细</h3><p>归集金额、税额、发生日期、费用分类和起止地点。</p></article>
+        <article><b>3</b><h3>标记问题</h3><p>不确定内容标黄，不可报销内容标红，并说明需要确认的地方。</p></article>
+      </div>
+      <div class="reply-card">
+        <p class="reply-title">我会回复你</p>
+        <p>摘要已经生成。请检查标黄内容、日期、金额、费用分类、起止地和报销事由。修改完成后告诉我“摘要确认好了，可以生成终稿”。</p>
+      </div>
+    </section>
+
+    <section id="confirm" class="section alt">
+      <div class="section-heading">
+        <p class="step-label">04</p>
+        <div><h2>检查并修改确认表</h2><p>打开 <code>05-需确认-报销摘要.xlsx</code>，直接修改需要调整的内容。</p></div>
+      </div>
+      <ul class="checklist">
+        <li>报销人、费用分类和票种正确。</li>
+        <li>费用发生日期和金额正确。</li>
+        <li>差旅行程的出发地、目的地正确。</li>
+        <li>打车地点类型和打车原因正确。</li>
+        <li>补贴天数和报销事由正确。</li>
+        <li>标黄、标红内容已经处理。</li>
+      </ul>
+      <figure class="manual-shot summary-shot"><img src="images/11-confirm-summary.png" alt="05 需确认报销摘要表"><figcaption>摘要表是中间确认文件。标黄内容需要人工核对或修改。</figcaption></figure>
+      <div class="confirm-message">
+        <p class="prompt-label">修改完成后回复</p>
+        <p>摘要确认好了，可以生成终稿。</p>
+      </div>
+    </section>
+
+    <section id="outputs" class="section">
+      <div class="section-heading">
+        <p class="step-label">05</p>
+        <div><h2>生成 09-终稿文件</h2><p>我会重新读取你确认后的摘要，再生成本次报销需要的文件。</p></div>
+      </div>
+      <div class="output-columns">
+        <article>
+          <h3>差旅报销</h3>
+          <code>09-终稿-OA差旅报销明细.xlsx</code>
+          <code>09-终稿-交通费明细.xlsx</code>
+          <p>交通费明细仅在存在对应打车明细时生成。</p>
+        </article>
+        <article>
+          <h3>其他报销</h3>
+          <code>09-终稿-OA报销金额明细.xlsx</code>
+          <p>其他报销不生成差旅行程和交通费明细。</p>
+        </article>
+        <article>
+          <h3>发票打印文件</h3>
+          <code>09-终稿-A4发票-普票-打印1张.pdf</code>
+          <code>09-终稿-A4发票-专票-整份打印2次.pdf</code>
+          <p>没有对应票种时，不生成空 PDF。</p>
+        </article>
+      </div>
+      <div class="shots-two final-sheet-shots">
+        <figure class="manual-shot"><img src="images/14-travel-detail.png" alt="脱敏后的交通费报销明细终稿"><figcaption>交通费明细：用于差旅报销的交通附件。</figcaption></figure>
+        <figure class="manual-shot"><img src="images/15-oa-travel-final.png" alt="脱敏后的 OA 差旅报销明细终稿"><figcaption>OA 差旅报销明细：第二步插件读取的终稿 Excel。</figcaption></figure>
+      </div>
+      <figure class="manual-shot folder-shot"><img src="images/12-final-folder.png" alt="包含确认表和终稿文件的完整报销文件夹"><figcaption>确认完成后，终稿和原始材料保留在同一个报销文件夹中。</figcaption></figure>
+      <figure class="manual-shot invoice-shot"><img src="images/13-a4-invoices.png" alt="A4 发票打印 PDF 示例"><figcaption>A4 发票 PDF 保留原始票面，供用户检查和打印。</figcaption></figure>
+    </section>
+
+    <section class="section alt">
+      <div class="section-heading">
+        <p class="step-label">06</p>
+        <div><h2>进入第二步</h2><p>使用 Chrome 插件读取 OA 终稿 Excel，将内容填入 OA 技术报销页。</p></div>
+      </div>
+      <a class="button primary" href="index.html">查看第二步操作手册</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>报销操作手册 · 第一步</p>
+    <a href="https://github.com/yideng-xl/jg-work-plugin-codex">查看 GitHub 仓库</a>
+  </footer>
+  <script src="manual.js?v=lightbox-1"></script>
+</body>
+</html>

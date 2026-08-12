@@ -1,0 +1,42 @@
+:root {
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  width: 420px;
+  background: #f7f9fc;
+}
+
+main {
+  padding: 18px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+h2 { margin: 0 0 10px; font-size: 15px; }
+p { margin: 6px 0; line-height: 1.5; }
+header > p { color: #64748b; font-size: 13px; }
+
+.file-picker { display: block; margin: 16px 0; padding: 12px; border: 1px dashed #94a3b8; border-radius: 8px; background: #fff; font-weight: 600; }
+.file-picker input { display: block; margin-top: 8px; width: 100%; }
+.card, .mode, .result { margin: 12px 0; padding: 12px; border: 1px solid #dbe2ea; border-radius: 8px; background: #fff; }
+.result h2 { color: #1677ff; font-weight: 700; }
+.filename { overflow-wrap: anywhere; color: #475569; }
+dl { margin: 8px 0 0; }
+dl div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+dt { color: #64748b; } dd { margin: 0; text-align: right; }
+.mode legend { padding: 0 4px; font-weight: 600; }
+.mode label { margin-right: 16px; }
+.mode input { margin-right: 4px; }
+.issues, .result ul { margin: 10px 0 0; padding-left: 20px; }
+.warning { color: #9a6700; }
+.error { color: #b42318; }
+.success { color: #067647; }
+.safety { margin-top: 14px; color: #475569; font-size: 12px; }
+.primary { width: 100%; padding: 11px 14px; border: 0; border-radius: 7px; background: #1677ff; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+.primary:disabled { background: #cbd5e1; cursor: not-allowed; }

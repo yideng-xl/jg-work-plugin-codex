@@ -1,0 +1,20 @@
+{
+  "name": "jg-work",
+  "interface": {
+    "displayName": "JG Work"
+  },
+  "plugins": [
+    {
+      "name": "jg-work-plugin-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/jg-work-plugin-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

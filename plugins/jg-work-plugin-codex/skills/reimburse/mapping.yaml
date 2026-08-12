@@ -1,0 +1,17 @@
+# 卖方关键词 / 票种 → 费用分类科目。命中即填，用户改后由 append_rule 追加。
+rules:
+  - match: {kind: 铁路电子客票}
+    category: 差旅费-交通费
+  - match: {item_contains: 客运服务}
+    category: 差旅费-交通费
+  - match: {seller_contains: 住宿}
+    category: 差旅费-住宿费
+  - match: {seller_contains: 酒店}
+    category: 差旅费-住宿费
+  - match: {seller_contains: 快递}
+    category: 快递费
+  # 待确认：第一次跑时用户定科目，Claude append 回写
+  - match: {seller_contains: 阿里云}
+    category: 待确认
+  - match: {seller_contains: 物业}
+    category: 待确认
