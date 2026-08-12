@@ -20,6 +20,19 @@ description: 上海巨耕报销自动化。用户说"搞报销/报销/整理发�
 6. 读回用户确认后的摘要，传入本次实际报销人，生成全部 `09-终稿-` 文件。
 7. 最后核对金额、票种、报销人、文件数量和命名，再交付用户。
 
+## 金额口径（所有票据、所有阶段强制）
+
+`金额`、`报销金额`统一指用户实际支付的**价税合计（含税金额）**。专票的税额单独填写，但不得从摘要的金额或 OA 的报销金额中扣除。
+
+- 摘要 Excel 的`金额` = 发票价税合计 = 用户实际支付金额。
+- 摘要 Excel 的`专票税额` = 发票税额；普票填 0 或留空，按现有模板规则执行。
+- OA 明细的`报销金额` = 摘要 Excel 的`金额`。
+- OA 明细的`增值税专票税额` = 摘要 Excel 的`专票税额`。
+- OA 明细的`费用金额` = `报销金额 - 增值税专票税额`，只有这个字段是不含税金额。
+- 表头`报销总金额` = Σ 报销金额；`增值税专票税额合计` = Σ 专票税额；`费用合计` = 报销总金额 - 增值税专票税额合计。
+
+例：住宿专票价税合计 500.00 元，税额 50.00 元。摘要写`金额 500.00`、`专票税额 50.00`；OA 写`报销金额 500.00`、`增值税专票税额 50.00`、`费用金额 450.00`。票据只解析出不含税金额或只解析出税额时，不能反推并直接写入摘要；标记待确认，让用户补价税合计。
+
 ## 环境
 脚本在 skill 自带 venv 跑：`~/.claude/skills/reimburse/.venv/bin/python`。
 首次用先 `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`。
@@ -93,7 +106,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 
    - **高德合并发票的日期陷阱**：高德打车的电子发票（xml）里 `RequestTime`（`scan.py` 塞进 `date` 字段的那个值）是**开票/取票请求时间**，不是真实用车时间——例如 7 月才点的开票，但行程实际发生在 5 月。行程单（`itinerary_pdf`）里有每段行程的真实上车时间，但当前 `parse_itinerary_text` 只返回 `{from, to}`，**没有把日期解析出来**。所以：摘要里高德票那行"费用发生日期"来自 `RequestTime`，**很可能是开票日而不是实际消费日**。不要在摘要或跟用户的话术里说"这就是打车当天"——生成摘要时对高德票的日期加个提示（可以写进备注，或口头告知用户），让用户自己核对/改成真实用车日期，尤其是这张票要落到某个月的报销周期时。
 
-4. 组装 row 列表（字段：`seq/filename/seller/invoice_kind/copies/date/amount/amount_usd/tax/category/category_uncertain/from_/to/loc_uncertain/reason/note/is_prepaid/is_allowance/allowance_days`）。
+4. 组装 row 列表（字段：`seq/filename/seller/invoice_kind/copies/date/amount/amount_usd/tax/category/category_uncertain/from_/to/loc_uncertain/reason/note/is_prepaid/is_allowance/allowance_days`）。其中 `amount` 必须是价税合计（含税金额），`tax` 是专票税额。禁止把 `amount - tax` 的结果写回 `amount`。
 
    **文件名列的写法是固定契约**：`row["filename"] = ticket["file_stem"]`——写 `scan_folder` 返回的 `file_stem`（不带后缀、已去掉"电子发票"等后缀的干净票号/文件名），**不要**写原始带扩展名的文件名。这是阶段二用"文件名"列反查、剔除预充值票的唯一 join key，两边字段不一致这个过滤就会静默失效。
 
@@ -165,7 +178,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 
      **别弄混两类明细**：OA 的「报销费用明细」是**一个费用分类一行**（同类发票合计成一行，逐票明细在交通费明细表/A4 发票拼贴那边）；而交通费明细表（`write_travel_detail`）是**一票/一段行程一行**。两个 writer 分工不同。`write_oa_general_detail`/`write_oa_travel_detail` 默认 `aggregate=True`，内部按费用分类聚合，所以你把 `read_summary` 的逐票行原样传进去就行，不用自己先合并。
 
-     表头信息区用 `default_header(kind, reason, applicant, fill_date, title, doc_no)` 生成（`kind` 传 `"通用"`/`"差旅"`；`applicant` 必须传本次实际报销人，不能使用固定姓名；其余未知项留空，写表时标黄让用户补）。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。费用金额列自动 = 报销金额 − 专票税额。合计行是 SUM 公式。
+     表头信息区用 `default_header(kind, reason, applicant, fill_date, title, doc_no)` 生成（`kind` 传 `"通用"`/`"差旅"`；`applicant` 必须传本次实际报销人，不能使用固定姓名；其余未知项留空，写表时标黄让用户补）。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。这里的 `items[].amount` 仍是价税合计：OA 报销金额直接取 `amount`，费用金额才自动计算为 `amount - tax`。合计行是 SUM 公式。
 
      **订阅类报销事由必须写金额构成**：逐项写“订阅名称 + 费用月份 + 原币金额”，保留实际订阅币种；美元写“美元”，人民币写“元”，不要把原币金额全部改写成人民币。美元费用同时写确认汇率和折算金额；支付平台已有人民币实付时一并写出。末尾写人民币报销合计。例如：`订阅费用：服务 A 10 美元（按 7.00 折算 70.00 元）；服务 B 20.00 元；合计 90.00 元。`
 
@@ -204,6 +217,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 ## 规则速查
 - 文件命名：需要用户确认的摘要固定为 `05-需确认-报销摘要.xlsx`；用户确认后生成的 Excel、PDF 等均加 `09-终稿-` 前缀。
 - 份数与文件：普票/铁路电子客票进入 `09-终稿-A4发票-普票-打印1张.pdf`；专票进入 `09-终稿-A4发票-专票-整份打印2次.pdf`。两个 PDF 内每张发票都只放 1 次；专票由用户打印整份文件 2 次。某类为空则不生成。
+- 金额：摘要金额、OA 报销金额都取价税合计（含税金额）；专票税额单列；只有 OA 费用金额按“报销金额−税额”计算。最终交付前必须验证：`报销总金额 = 费用合计 + 增值税专票税额合计`。
 - 补贴：50 元/天，同日往返固化 1 天，按发车时间 12 点分界规则；`depart_time` 直接从 `scan_folder` 的 ticket dict 上读，不用另外解析 PDF。
 - 预充值发票不可报销（标红、不计入合计、不进 A4）。`is_prepaid` 只存在于 `scan_folder` 的原始 ticket 里，`read_summary` 读回的摘要行没有这个字段——阶段二做任何"排除预充值"的过滤，都要靠 phase-1 保留的 `tickets`（或重跑一次 `scan_folder`）按文件名匹配，不能对摘要行 `r.get("is_prepaid")`。
 - 高德发票日期字段是开票请求时间，不是实际用车日期，需用户核对。

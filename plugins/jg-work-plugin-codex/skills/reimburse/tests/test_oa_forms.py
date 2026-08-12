@@ -142,6 +142,26 @@ def test_inject_totals_fills_header():
     assert filled["费用合计"] == 1651.10          # 报销总金额 - 专票税额合计
 
 
+def test_lodging_special_invoice_keeps_tax_in_reimbursement(tmp_path):
+    """专票价税合计进入报销金额，只有费用金额扣税。"""
+    items = [{"category": "差旅-住宿费", "legs": "1", "amount": 500.0,
+              "tax": 50.0, "note": ""}]
+    rows = default_header("差旅", reason="测试出差", applicant="测试用户")
+    filled = _flatten(_inject_totals(rows, items))
+    assert filled["报销总金额"] == 500.0
+    assert filled["增值税专票税额合计"] == 50.0
+    assert filled["费用合计"] == 450.0
+
+    out = tmp_path / "住宿专票口径.xlsx"
+    write_oa_travel_detail([], items, str(out), header_fields=rows)
+    ws = openpyxl.load_workbook(str(out), data_only=False).active
+    band_texts = _rows_text(ws)
+    first_expense = band_texts.index("报销费用明细") + 3
+    assert ws.cell(first_expense, 4).value == 500.0
+    assert ws.cell(first_expense, 5).value == 50.0
+    assert ws.cell(first_expense, 6).value == 450.0
+
+
 def test_infer_uncertain_cells_highlighted_yellow(tmp_path):
     trips = infer_trip_defaults([
         {"dep_date": "2026-06-09", "dep_time": "08:12", "from_": "上海虹桥",
