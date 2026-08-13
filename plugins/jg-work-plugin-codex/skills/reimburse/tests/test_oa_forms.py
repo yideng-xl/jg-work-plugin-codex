@@ -128,6 +128,18 @@ def test_infer_trip_defaults():
     assert "arr_time" not in trips[0]
 
 
+def test_train_and_flight_arrival_time_requires_public_schedule():
+    trips = [
+        {"transport_type": "高铁", "dep_date": "2099-01-10", "dep_time": "08:00"},
+        {"transport_type": "飞机", "dep_date": "2099-01-12", "dep_time": "16:00"},
+    ]
+    out = infer_trip_defaults(trips)
+    assert out[0].get("arr_time") is None
+    assert out[1].get("arr_time") is None
+    assert "arr_time" in out[0]["_uncertain"]
+    assert "arr_time" in out[1]["_uncertain"]
+
+
 def _flatten(rows):
     return {label: v for pairs in rows for (label, v) in pairs}
 

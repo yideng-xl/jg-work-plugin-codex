@@ -23,6 +23,7 @@ def test_parse_train():
     assert r["tax"] is None
     assert r["date"] == "2099-01-10"       # 乘车日期
     assert r["depart_time"] == "08:12"
+    assert r["train_no"] == "G0001"
     assert r["from_"] == "甲地"
     assert r["to"] == "乙地"
 

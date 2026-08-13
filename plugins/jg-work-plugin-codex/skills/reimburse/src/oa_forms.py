@@ -321,7 +321,8 @@ def infer_trip_defaults(trips: list) -> list:
     """给行程补推断默认值并标黄。返回新 trips 列表，每项带 _uncertain 集合，
     原地不改传入对象。规则（对齐真实 OA 差旅单）：
     - 到达日期缺 → = 出发日期（当天到，通常成立，不标黄）。
-    - 到达时间缺 → 出发时间 +默认时长（推不准，标黄）。
+    - 高铁/飞机到达时间缺 → 保持空值，必须先查公开计划时刻。
+    - 其他交通到达时间缺 → 出发时间 +默认时长（推不准，标黄）。
     - 住宿天数逐段：本段到达 → 下段出发之间的夜数；末段（返程）为 0；标黄。
       例：4/13 到郑州、4/15 离郑州 → 首段住宿 2、末段 0。"""
     out = []
@@ -330,11 +331,14 @@ def infer_trip_defaults(trips: list) -> list:
         unc = set(t.get("_uncertain") or set())
         if not t.get("arr_date") and t.get("dep_date"):
             t["arr_date"] = t["dep_date"]          # 当天到，通常成立，不标黄
-        if not t.get("arr_time") and t.get("dep_time"):
+        public_schedule_required = t.get("transport_type") in {"高铁", "飞机"}
+        if not t.get("arr_time") and t.get("dep_time") and not public_schedule_required:
             guess = _add_hours(t["dep_time"], _DEFAULT_LEG_HOURS)
             if guess:
                 t["arr_time"] = guess
                 unc.add("arr_time")
+        if not t.get("arr_time") and public_schedule_required:
+            unc.add("arr_time")
         t["_uncertain"] = unc
         out.append(t)
 

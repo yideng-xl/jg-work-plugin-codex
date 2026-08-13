@@ -64,6 +64,7 @@ def test_scan_train_pdf_no_xml(tmp_path, monkeypatch):
     assert t["trips"][0]["from"] == "甲地"
     assert t["trips"][0]["to"] == "乙地"
     assert t["depart_time"] == "08:12"
+    assert t["train_no"] == "G0001"
 
 # 另一版铁路电子客票：开票日期排在乘车日期前面，"票价:"与"￥446.00"中间
 # 隔了座别/身份证号等（旧正则漏解析金额、且把开票日当成乘车日）。

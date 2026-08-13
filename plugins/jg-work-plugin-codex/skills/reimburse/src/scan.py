@@ -47,7 +47,7 @@ def scan_folder(folder: str) -> list:
             "source_type": "other", "seller": None, "invoice_kind": "unknown",
             "copies": 1, "date": None, "amount": None, "tax": None,
             "item_name": None, "trips": [], "trip_count": None,
-            "is_prepaid": False, "depart_time": None,
+            "is_prepaid": False, "depart_time": None, "train_no": None,
             "pdf_path": str(invoice_pdf) if invoice_pdf else None,
         }
 
@@ -67,7 +67,8 @@ def scan_folder(folder: str) -> list:
                          invoice_kind=tr["invoice_kind"], amount=tr["amount"],
                          tax=tr["tax"], date=tr["date"],
                          trips=[{"from": tr["from_"], "to": tr["to"]}],
-                         depart_time=tr.get("depart_time"))
+                         depart_time=tr.get("depart_time"),
+                         train_no=tr.get("train_no"))
             else:
                 t["source_type"] = "bare_pdf"
                 item_m = re.search(r"\*[^*\n]+\*[^\s\d]+费", text)

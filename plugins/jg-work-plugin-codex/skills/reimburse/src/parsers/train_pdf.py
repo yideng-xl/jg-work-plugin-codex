@@ -9,6 +9,7 @@ RIDE_DATE_RE = re.compile(r"(\d{4})\s*年\s*(\d{2})\s*月\s*(\d{2})\s*日")
 # 开票日期，用来把它从候选乘车日期里排除（有的版式开票日排在乘车日前面）
 INVOICE_DATE_RE = re.compile(r"开票日期\s*[:：]?\s*\d{4}\s*年\s*\d{2}\s*月\s*\d{2}\s*日")
 DEPART_TIME_RE = re.compile(r"(\d{2}:\d{2})\s*开")
+TRAIN_NO_RE = re.compile(r"\b([GDCZTK]\d{1,4})\b", re.IGNORECASE)
 
 
 def parse_train_text(text: str) -> dict:
@@ -19,6 +20,7 @@ def parse_train_text(text: str) -> dict:
     stations = STATION_RE.findall(text)
     price = PRICE_RE.search(text)
     depart = DEPART_TIME_RE.search(text)
+    train_no = TRAIN_NO_RE.search(text)
 
     # 乘车日期：跳过"开票日期"那一处，取第一个真正的日期
     inv = INVOICE_DATE_RE.search(text)
@@ -46,6 +48,7 @@ def parse_train_text(text: str) -> dict:
         "tax": None,
         "date": date,
         "depart_time": depart.group(1) if depart else None,
+        "train_no": train_no.group(1).upper() if train_no else None,
         "from_": from_,
         "to": to,
     }
