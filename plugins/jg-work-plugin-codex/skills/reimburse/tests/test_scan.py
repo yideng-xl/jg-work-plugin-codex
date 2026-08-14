@@ -146,3 +146,15 @@ def test_scan_excludes_own_outputs(tmp_path, monkeypatch):
     # 只认那 1 张发票, A4拼贴.pdf / xlsx 产出物被排除
     assert len(tickets) == 1
     assert "曹操" in tickets[0]["file_stem"]
+
+
+def test_scan_excludes_prefixed_final_outputs(tmp_path, monkeypatch):
+    d = tmp_path / "报销"
+    d.mkdir()
+    (d / "原始发票.pdf").write_bytes(b"%PDF fake")
+    (d / "05-需确认-报销摘要.xlsx").write_bytes(b"fake")
+    (d / "09-终稿-A4发票-普票-打印1张.pdf").write_bytes(b"%PDF fake")
+    monkeypatch.setattr(scan, "extract_pdf_text", lambda path: "普通发票")
+    tickets = scan_folder(str(d))
+    assert len(tickets) == 1
+    assert tickets[0]["file_stem"] == "原始发票"

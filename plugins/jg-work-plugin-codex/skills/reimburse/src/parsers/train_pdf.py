@@ -58,3 +58,54 @@ def extract_pdf_text(path: str) -> str:
     from pypdf import PdfReader
     reader = PdfReader(path)
     return "\n".join((p.extract_text() or "") for p in reader.pages)
+
+
+def _stations_by_x(path: str) -> list[tuple[str, float]]:
+    """按票面坐标提取同一视觉行内的站名。
+
+    铁路电子客票的左侧是出发站，右侧是到达站。只在同一页、同一
+    视觉行内选取站名，避免把页面其他位置的“站”误当成行程。
+    """
+    import fitz
+
+    candidates = []
+    with fitz.open(path) as doc:
+        for page_no, page in enumerate(doc):
+            data = page.get_text("dict")
+            visual_lines = {}
+            for block in data.get("blocks", []):
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        # 同一视觉行可能被 PDF 分成多个 block，按 y 容差重组。
+                        y_key = round(span["bbox"][1] / 3) * 3
+                        visual_lines.setdefault(y_key, []).append(span)
+            for y0, spans in visual_lines.items():
+                spans.sort(key=lambda s: s["bbox"][0])
+                found = []
+                for span in spans:
+                    for match in STATION_RE.finditer(span["text"]):
+                        found.append((match.group(1), span["bbox"][0]))
+                if len(found) >= 2:
+                    candidates.append((page_no, y0, found))
+    if not candidates:
+        return []
+    _, _, stations = min(candidates, key=lambda item: (item[0], item[1]))
+    return sorted(stations, key=lambda item: item[1])[:2]
+
+
+def parse_train_pdf(path: str, text: str | None = None) -> dict:
+    """解析铁路电子客票：文本法取金额、日期和车次，坐标法确认方向。
+
+    坐标提取失败时保留文本法结果，让上层继续按公开时刻表校验。
+    """
+    result = parse_train_text(text if text is not None else extract_pdf_text(path))
+    if not result.get("is_train"):
+        return result
+    try:
+        stations = _stations_by_x(path)
+    except Exception:
+        stations = []
+    if len(stations) >= 2:
+        result["from_"] = stations[0][0]
+        result["to"] = stations[1][0]
+    return result

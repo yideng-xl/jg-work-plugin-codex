@@ -3,8 +3,8 @@ import pytest
 from src.summary_io import write_summary, read_summary, write_travel_detail, HEADERS
 
 ROWS = [
-    {"seq": 1, "filename": "a.pdf", "seller": "曹操出行", "invoice_kind": "普票",
-     "copies": 1, "date": "2026-05-01", "amount": 185.82, "amount_usd": None,
+    {"seq": 1, "filename": "a.pdf", "seller": "测试出行", "invoice_kind": "普票",
+     "copies": 1, "date": "2099-05-01", "amount": 60.00, "amount_usd": None,
      "tax": None, "category": "差旅费-交通费", "category_uncertain": False,
      "from_": "A", "to": "B", "loc_uncertain": False, "reason": "无直达交通",
      "note": "", "is_prepaid": False, "is_allowance": False, "allowance_days": None},
@@ -108,9 +108,9 @@ def test_read_summary_roundtrip(tmp_path):
     out = tmp_path / "摘要.xlsx"
     write_summary(ROWS, str(out), rate=6.78)
     back = read_summary(str(out))
-    assert back[0]["seller"] == "曹操出行"
+    assert back[0]["seller"] == "测试出行"
     assert back[0]["category"] == "差旅费-交通费"
-    assert back[0]["date"] == "2026-05-01"
+    assert back[0]["date"] == "2099-05-01"
 
 
 def test_read_summary_usd_amount_not_formula_string(tmp_path):
@@ -126,7 +126,7 @@ def test_read_summary_usd_amount_not_formula_string(tmp_path):
     usd_amount = back[1]["amount"]
 
     # RMB 行是字面量，原样读回数字
-    assert rmb_amount == 185.82
+    assert rmb_amount == 60.00
 
     # USD 行是公式：绝不能读成以 "=" 开头的字符串
     assert not (isinstance(usd_amount, str) and usd_amount.startswith("="))

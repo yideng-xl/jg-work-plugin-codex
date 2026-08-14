@@ -30,9 +30,9 @@ def test_append_and_reload(tmp_path):
     assert len(load_mapping(str(f))) == 1
 
 
-def test_match_by_item_contains_real_gaode_case():
-    """真实数据案例：高德打车 XML 的 SellerName 是法人实体名（如"苏州市吉利优行电子
-    科技有限公司"），seller_contains 关键词（出行/约车/用车）匹配不上。但 ItemName
+def test_match_by_item_contains_gaode_case():
+    """匿名案例：高德打车 XML 的 SellerName 可能是未含出行关键词的法人实体名，
+    seller_contains 关键词（出行/约车/用车）匹配不上。但 ItemName
     含"客运服务"是可靠信号（xml 和裸 PDF 提取文本都含这个公共子串），改用
     item_contains 规则命中，销售方信息无视。"""
     rules = [
@@ -40,7 +40,7 @@ def test_match_by_item_contains_real_gaode_case():
         {"match": {"item_contains": "客运服务"}, "category": "差旅费-交通费"},
     ]
     t_xml = {
-        "seller": "苏州市吉利优行电子科技有限公司",
+        "seller": "测试客运服务有限公司",
         "invoice_kind": "普票",
         "item_name": "*交通运输服务*客运服务费",
     }
@@ -49,7 +49,7 @@ def test_match_by_item_contains_real_gaode_case():
     # 裸 PDF：PDF 文本提取缺"交通"前缀，item_name 是 "*运输服务*客运服务费"，
     # 仍含公共子串"客运服务"，同样要命中。
     t_bare_pdf = {
-        "seller": "上海及时用车科技有限公司",
+        "seller": "示例运输科技有限公司",
         "invoice_kind": "普票",
         "item_name": "*运输服务*客运服务费",
     }

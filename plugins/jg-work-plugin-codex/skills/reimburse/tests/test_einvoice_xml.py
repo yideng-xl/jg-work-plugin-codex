@@ -5,22 +5,22 @@ SAMPLE = """<?xml version="1.0" encoding="utf-8"?>
   <GeneralOrSpecialVAT><LabelCode>02</LabelCode><LabelName>普通发票</LabelName></GeneralOrSpecialVAT>
 </InherentLabel></Header>
 <EInvoiceData>
-  <SellerInformation><SellerName>苏州市吉利优行电子科技有限公司</SellerName></SellerInformation>
+  <SellerInformation><SellerName>测试客运服务有限公司</SellerName></SellerInformation>
   <BasicInformation>
     <TotalTaxAm>5.41</TotalTaxAm>
-    <TotalTax-includedAmount>185.82</TotalTax-includedAmount>
-    <RequestTime>2026-07-08 16:18:05</RequestTime>
+    <TotalTax-includedAmount>60.00</TotalTax-includedAmount>
+    <RequestTime>2099-07-08 16:18:05</RequestTime>
   </BasicInformation>
   <IssuItemInformation><ItemName>*交通运输服务*客运服务费</ItemName></IssuItemInformation>
 </EInvoiceData></EInvoice>"""
 
 def test_parse_normal_invoice():
     r = parse_einvoice_xml(SAMPLE)
-    assert r["seller"] == "苏州市吉利优行电子科技有限公司"
+    assert r["seller"] == "测试客运服务有限公司"
     assert r["invoice_kind"] == "普票"
-    assert r["amount"] == 185.82
+    assert r["amount"] == 60.00
     assert r["tax"] == 5.41
-    assert r["date"] == "2026-07-08"
+    assert r["date"] == "2099-07-08"
     assert r["is_prepaid"] is False
 
 def test_prepaid_detected():

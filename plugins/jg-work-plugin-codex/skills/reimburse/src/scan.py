@@ -5,14 +5,15 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.parsers.einvoice_xml import parse_einvoice_xml, PREPAID_KEYWORDS
-from src.parsers.train_pdf import parse_train_text, extract_pdf_text
+from src.parsers.train_pdf import parse_train_pdf, extract_pdf_text
 from src.parsers.filename import parse_gaode_filename
-from src.parsers.itinerary_pdf import parse_itinerary_text
+from src.parsers.itinerary_pdf import parse_itinerary_pdf
 
 
 # skill 自己的产出物名。扫描时排除，否则重跑会把上次生成的
 # A4拼贴.pdf 当成一张发票扫进来（它是 PDF），污染票数和统一缩放。
 OUTPUT_NAMES = {"A4拼贴.pdf", "报销摘要.xlsx", "交通费明细.xlsx"}
+OUTPUT_PREFIXES = ("05-", "09-", "A4")
 
 
 def build_copies(invoice_kind: str) -> int:
@@ -29,7 +30,8 @@ def _group_key(path: Path) -> str:
 def scan_folder(folder: str) -> list:
     files = [p for p in Path(folder).rglob("*") if p.is_file()
              and p.suffix.lower() in (".xml", ".pdf", ".ofd")
-             and p.name not in OUTPUT_NAMES]
+             and p.name not in OUTPUT_NAMES
+             and not p.name.startswith(OUTPUT_PREFIXES)]
     groups = defaultdict(list)
     for p in files:
         groups[_group_key(p)].append(p)
@@ -61,7 +63,7 @@ def scan_folder(folder: str) -> list:
         # 2) 无 xml，看 pdf 是否火车票
         elif invoice_pdf is not None:
             text = extract_pdf_text(str(invoice_pdf))
-            tr = parse_train_text(text)
+            tr = parse_train_pdf(str(invoice_pdf), text=text)
             if tr.get("is_train"):
                 t.update(source_type="train_pdf", seller=tr["seller"],
                          invoice_kind=tr["invoice_kind"], amount=tr["amount"],
@@ -87,9 +89,12 @@ def scan_folder(folder: str) -> list:
             if t["amount"] is None:
                 t["amount"] = fn["amount"]
 
-        # 4) 行程单补起止地
+        # 4) 行程单补起止地和实际乘车日期/时间
         if itinerary_pdf is not None:
-            t["trips"] = parse_itinerary_text(extract_pdf_text(str(itinerary_pdf)))
+            t["trips"] = parse_itinerary_pdf(str(itinerary_pdf))
+            if t["trips"]:
+                t["ride_date"] = t["trips"][0].get("date")
+                t["ride_time"] = t["trips"][0].get("time")
 
         t["copies"] = build_copies(t["invoice_kind"])
         tickets.append(t)
