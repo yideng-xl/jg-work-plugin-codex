@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JG报销助理 · 操作手册</title>
+<style>
+  :root {
+    --primary: #1a6b5c;
+    --primary-light: #e6f4f1;
+    --accent: #d97706;
+    --accent-light: #fdf3e3;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --code-bg: #f3f4f6;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --success: #15803d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  a { color: #0f766e; text-decoration: underline; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 40px 20px 80px;
+  }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  header.hero {
+    background: linear-gradient(135deg, #134e4a 0%, #1a6b5c 60%, #2c8f7d 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 40px 44px;
+    margin-bottom: 28px;
+  }
+  header.hero h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  header.hero .sub {
+    font-size: 15px;
+    opacity: 0.9;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 999px;
+    padding: 3px 14px;
+    font-size: 12px;
+    margin-top: 14px;
+    margin-right: 8px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 34px;
+    margin-bottom: 22px;
+  }
+  h2 {
+    font-size: 20px;
+    color: var(--primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .num {
+    background: var(--primary);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  h3 {
+    font-size: 16px;
+    margin: 20px 0 10px;
+    color: var(--text);
+  }
+  p { margin-bottom: 10px; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+  code {
+    background: var(--code-bg);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #0f766e;
+  }
+  .tip {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .warn {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .danger {
+    background: var(--danger-light);
+    border-left: 4px solid var(--danger);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .step .dot {
+    background: var(--primary);
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step .body { flex: 1; }
+  .step .body strong { display: block; margin-bottom: 2px; }
+  .step .body span { color: var(--text-secondary); font-size: 14px; }
+  .path {
+    background: #0f172a;
+    color: #d1fae5;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    border-radius: 8px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin: 8px 0;
+  }
+  .footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 30px;
+  }
+  .site-nav {
+    max-width: 860px;
+    margin: 0 auto 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .site-nav .links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .site-nav a {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--primary);
+    font-weight: 650;
+    text-decoration: none;
+  }
+  .site-nav a.download { border-color: var(--primary); color: #fff; background: var(--primary); }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card { border: none; padding: 16px 0; }
+    header.hero { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<nav class="site-nav" aria-label="报销手册导航">
+  <div class="links">
+    <a href="prepare.html">Codex 整理票据</a>
+    <a href="index.html">Chrome 填入 OA</a>
+  </div>
+  <a class="download" href="downloads/jg-reimburse-assistant.zip" download>下载 WorkBuddy 专家包</a>
+</nav>
+<div class="page">
+
+  <header class="hero">
+    <h1>🧾 JG报销助理 · 操作手册</h1>
+    <div class="sub">公司内部报销助手：从电子发票整理到报销终稿生成</div>
+    <div>
+      <span class="badge">专家名称：JG报销助理</span>
+      <span class="badge">专家包版本：v1.0.0</span>
+      <span class="badge">✅ 完整流程已验证：2026-08-17</span>
+      <span class="badge">适用：WorkBuddy 桌面端</span>
+    </div>
+  </header>
+
+  <!-- 一、是什么 -->
+  <div class="card">
+    <h2><span class="num">1</span>它是什么</h2>
+    <p><strong>JG报销助理</strong> 是一个内置于 WorkBuddy 的 AI 报销专家。它会读取 GitHub 中的公司报销规则，处理金额口径、补贴计算、差旅天数和 A4 拼贴。把电子发票放进一个文件夹，告诉它材料位置，就能生成：</p>
+    <table>
+      <tr><th>产出物</th><th>说明</th></tr>
+      <tr><td><code>05-需确认-报销摘要.xlsx</code></td><td>报销摘要（阶段一），黄色标记需要你人工核对/修改的地方</td></tr>
+      <tr><td><code>09-终稿-OA差旅报销明细.xlsx</code></td><td>OA 系统差旅报销明细（行程表 + 费用表）</td></tr>
+      <tr><td><code>09-终稿-交通费明细.xlsx</code></td><td>交通费明细（高铁、打车逐笔）</td></tr>
+      <tr><td><code>09-终稿-A4发票-*.pdf</code></td><td>A4 发票拼贴 PDF，可直接打印粘贴报销单</td></tr>
+    </table>
+    <div class="tip">💡 支持票据类型：高铁电子客票、打车行程单（高德等）、酒店住宿专票、增值税电子发票、水单附件等。</div>
+
+    <h3>版本机制：skill 自动跟随 GitHub 最新版</h3>
+    <p>本专家<b>不内置报销规则副本</b>，每次开始处理报销时，会自动从公司 GitHub 仓库拉取最新版报销规则并执行。因此：</p>
+    <ul>
+      <li><b>报销规则升级后，你无需重新安装专家</b>——下次使用时自动用上最新版</li>
+      <li>需要你的电脑能访问 GitHub（安装 git 且网络可达）</li>
+      <li>若拉取失败，专家会提示「无法连接 GitHub」，请检查网络后重试</li>
+    </ul>
+    <div class="tip">✅ <b>验证记录（2026-08-17）</b>：本专家已用最新报销规则完整跑通一单真实差旅报销（高铁 + 打车 + 住宿专票 + 补贴），金额口径、行程、A4 排版均验证正确。同事拿到本手册即可直接使用。</div>
+  </div>
+
+  <!-- 二、安装 -->
+  <div class="card">
+    <h2><span class="num">2</span>安装（首次使用）</h2>
+    <p>拿到安装包 <code>jg-reimburse-assistant.zip</code> 后，任选一种方式：</p>
+
+    <h3>方式一：专家中心导入（推荐）</h3>
+    <div class="step"><div class="dot">1</div><div class="body"><strong>打开 WorkBuddy</strong><span>启动桌面端，等待首页加载完成</span></div></div>
+    <div class="step"><div class="dot">2</div><div class="body"><strong>进入专家中心</strong><span>点击左侧边栏的「<b>专家</b>」入口</span></div></div>
+    <div class="step"><div class="dot">3</div><div class="body"><strong>导入专家包</strong><span>在专家中心找到「<b>导入</b> / 导入专家包」按钮（一般在右上角或「我的专家」页内），选择 <code>jg-reimburse-assistant.zip</code></span></div></div>
+    <div class="step"><div class="dot">4</div><div class="body"><strong>确认导入</strong><span>导入完成后，在「<b>我的专家</b>」列表中应能看到「JG报销助理」</span></div></div>
+
+    <h3>方式二：手动放置（备用）</h3>
+    <p>如果界面上找不到导入入口（不同版本入口位置可能不同），可用手动方式：</p>
+    <div class="step"><div class="dot">1</div><div class="body"><strong>解压 zip</strong><span>把 zip 解压，得到 <code>jg-reimburse-assistant/</code> 文件夹</span></div></div>
+    <div class="step"><div class="dot">2</div><div class="body"><strong>复制到专家目录</strong><span>将整个文件夹复制到：</span>
+      <div class="path">~/.workbuddy/plugins/marketplaces/my-experts/plugins/</div>
+      <span>（macOS：<code>访达 → 前往 → 个人 → .workbuddy → plugins → marketplaces → my-experts → plugins</code>）</span>
+    </div></div>
+    <div class="step"><div class="dot">3</div><div class="body"><strong>重启 WorkBuddy</strong><span>完全退出后重新打开，进入「专家 → 我的专家」即可看到</span></div></div>
+
+    <div class="warn">⚠️ 安装后如未立即显示，请<b>完全退出并重启</b> WorkBuddy 一次（不是关窗口，是退出应用）。</div>
+  </div>
+
+  <!-- 三、使用 -->
+  <div class="card">
+    <h2><span class="num">3</span>使用流程</h2>
+
+    <h3>3.1 准备素材文件夹</h3>
+    <p>把本次要报销的全部票据（<code>.pdf / .xml / .ofd</code>，压缩包 <code>.zip</code> 也行）放进一个文件夹，例如 <code>~/Desktop/报销/8月差旅/</code>。</p>
+    <div class="tip">💡 一个文件夹 = 一次报销单。每张发票一个文件（或一个 zip），文件夹里不要放无关文件。</div>
+
+    <h3>3.2 召唤专家</h3>
+    <div class="step"><div class="dot">1</div><div class="body"><strong>进入专家中心</strong><span>左侧边栏「专家」→「我的专家」→ 点击「JG报销助理」卡片，开始对话</span></div></div>
+    <div class="step"><div class="dot">2</div><div class="body"><strong>告诉它素材位置</strong><span>直接说，例如：</span>
+      <div class="path">"扫描 /Users/xxx/Desktop/报销/8月差旅 文件夹，生成报销摘要"</div>
+    </div></div>
+
+    <h3>3.3 两阶段流程</h3>
+    <table>
+      <tr><th>阶段</th><th>做什么</th><th>产出</th></tr>
+      <tr>
+        <td><b>阶段一：扫描确认</b></td>
+        <td>专家扫描文件夹，识别每张票据，生成<b>报销摘要</b>。黄色/红色标记的地方（如地点类型待确认）需要你人工核对修改</td>
+        <td><code>05-需确认-报销摘要.xlsx</code></td>
+      </tr>
+      <tr>
+        <td><b>阶段二：生成终稿</b></td>
+        <td>你确认摘要无误后，让专家「<b>生成终稿</b>」</td>
+        <td><code>09-终稿-*</code>（OA 明细 / 交通费明细 / A4 PDF）</td>
+      </tr>
+    </table>
+    <div class="step"><div class="dot">3</div><div class="body"><strong>核对摘要</strong><span>打开 <code>05-需确认-报销摘要.xlsx</code>，重点核对：金额、日期、起止地方向（尤其高铁去/返程）、住宿开票日、补贴天数、黄色标记项</span></div></div>
+    <div class="step"><div class="dot">4</div><div class="body"><strong>生成终稿</strong><span>对专家说：「<b>摘要确认好了，生成终稿</b>」→ 得到 OA 明细、交通费明细、A4 拼贴 PDF</span></div></div>
+    <div class="step"><div class="dot">5</div><div class="body"><strong>提交报销</strong><span>A4 PDF 打印后贴到报销单，OA 明细填 OA 系统，完成提交</span></div></div>
+  </div>
+
+  <!-- 四、更新 -->
+  <div class="card">
+    <h2><span class="num">4</span>更新</h2>
+    <h3>报销规则更新（无需任何操作）</h3>
+    <p>报销规则/解析能力升级后，由管理员更新 GitHub 仓库即可。<b>你什么都不用做</b>——下次使用专家时，它会自动拉取最新版报销规则。</p>
+    <div class="tip">💡 不确定是否已用上新版？对话时让专家先跑一次，或问它「当前用的报销规则是哪天的版本」。</div>
+
+    <h3>专家本身更新（极少发生）</h3>
+    <p>只有当专家的对话指令、头像等自身内容变化时，才需要重新导入新版 zip：</p>
+    <div class="step"><div class="dot">1</div><div class="body"><strong>拿到新版 zip</strong><span>由管理员分发新版 <code>jg-reimburse-assistant.zip</code></span></div></div>
+    <div class="step"><div class="dot">2</div><div class="body"><strong>重新导入覆盖</strong><span>与首次安装方式相同：专家中心「导入」选择新版 zip，同名覆盖即可</span></div></div>
+    <div class="step"><div class="dot">3</div><div class="body"><strong>重启生效</strong><span>完全退出并重启 WorkBuddy</span></div></div>
+    <div class="danger">⚠️ 更新前如正在报销流程中，请先完成当前单据或删除中间产物（05/09 开头的文件），再重跑，避免新旧混用。</div>
+  </div>
+
+  <!-- 五、常见问题 -->
+  <div class="card">
+    <h2><span class="num">5</span>常见问题（FAQ）</h2>
+    <table>
+      <tr><th style="width:32%">问题</th><th>解决办法</th></tr>
+      <tr><td>导入后专家列表看不到</td><td>完全退出并重启 WorkBuddy；确认 zip 解压后目录名是 <code>jg-reimburse-assistant</code> 且放在 <code>my-experts/plugins/</code> 下</td></tr>
+      <tr><td>提示「无法连接 GitHub / 拉取失败」</td><td>说明电脑访问不了 GitHub：检查网络（公司代理/VPN）、确认已安装 git；解决后重新对话即可，不影响已生成的报销文件</td></tr>
+      <tr><td>扫描后没有识别到某张票</td><td>确认文件是 PDF/XML/OFD 且未损坏；试试单独新建文件夹只放这一张票重跑；或直接在摘要里手动补一行</td></tr>
+      <tr><td>酒店住宿发票显示 unknown / 识别不到</td><td>属已知限制：部分住宿专票 PDF 无法自动识别。专家会读 PDF 人工确认「专票 / 金额 / 税额 / 开票日」并在摘要中补全，你核对金额即可</td></tr>
+      <tr><td>高铁到达时间空着 / 方向待确认</td><td>专家会按规则查<a href="https://kyfw.12306.cn/otn/queryTrainInfo/init" target="_blank" rel="noopener">公开时刻表（12306）</a>复核方向并补到达时间。摘要里「出发地/目的地」两列请重点核对，错了直接改后重新生成终稿</td></tr>
+      <tr><td>交通费明细里没有高铁</td><td>正常：高铁发票直接进 A4 拼贴，交通费明细只列打车（市内交通）</td></tr>
+      <tr><td>金额和发票对不上</td><td>摘要里金额都是「价税合计」（实际支付金额），专票会单独列税额；有疑问可以人工改摘要，改完再生成终稿即可</td></tr>
+      <tr><td>地点类型标了黄色「待确认」</td><td>行程单里没有明确 POI 时无法自动判断类型，人工补一下即可</td></tr>
+      <tr><td>高铁方向识别反了</td><td>先确认票面，摘要中手动纠正「起/止」地后重新生成终稿</td></tr>
+      <tr><td>生成 PDF 报错 / 缺字体</td><td>重试一次；仍失败则联系管理员（报告报错信息），不要在本地乱改配置</td></tr>
+    </table>
+  </div>
+
+  <!-- 六、管理员维护 -->
+  <div class="card">
+    <h2><span class="num">6</span>管理员维护（分发者专用）</h2>
+    <p>以下内容供负责维护和分发的同事使用。</p>
+    <h3>日常维护：只需维护 GitHub 仓库</h3>
+    <ol>
+      <li>报销 skill 的修复/更新由 Codex 维护，推送到 GitHub 仓库 <a href="https://github.com/yideng-xl/jg-work-plugin-codex" target="_blank" rel="noopener"><code>yideng-xl/jg-work-plugin-codex</code></a></li>
+      <li><b>同事侧无需任何操作</b>——专家每次执行自动拉取最新版</li>
+      <li>skill 更新后<b>不需要</b>重新打包 zip 分发给同事</li>
+      <li>版本基线：2026-08-17 已用仓库最新 skill 完整跑通一单真实报销验证</li>
+    </ol>
+    <h3>只有以下情况才需要重新打包 zip</h3>
+    <ol>
+      <li>修改了专家本身的指令（<code>agents/jg-reimburse-assistant.md</code>）</li>
+      <li>更换了头像、改展示信息（plugin.json）</li>
+      <li>此时在 WorkBuddy 中对助手说：「<b>重新打包专家</b>」，再把新 zip 发给尚未安装的同事</li>
+    </ol>
+    <h3>检查当前安装的版本</h3>
+    <p>专家目录下 <code>.codebuddy-plugin/plugin.json</code> 的 <code>version</code> 字段即为当前版本号。</p>
+  </div>
+
+  <div class="footer">
+    JG报销助理专家包 v1.0.0 · 手册更新 2026-08-17 · 公司内部维护
+  </div>
+
+</div>
+</body>
+</html>
