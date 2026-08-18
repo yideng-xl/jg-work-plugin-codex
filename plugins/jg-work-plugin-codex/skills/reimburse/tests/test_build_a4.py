@@ -1,5 +1,5 @@
 from pypdf import PdfReader, PdfWriter
-from src.build_a4 import build_a4, _uniform_scale, A4_W, A4_H
+from src.build_a4 import build_a4, split_print_specs, _uniform_scale, A4_W, A4_H
 
 
 def _make_pdf(path, w=595, h=421):
@@ -47,3 +47,29 @@ def test_uniform_scale_driven_by_largest(tmp_path):
     assert s < short_fit                    # 矮票被压到统一系数，不再独立撑满
     # 两张同宽源 => 同一系数 => 最终同宽
     assert abs(595 * s - 595 * s) < 1e-9
+
+
+def test_railway_ticket_uses_two_copy_booklet_without_becoming_special_invoice():
+    tickets = [
+        {"pdf_path": "normal.pdf", "invoice_kind": "普票"},
+        {"pdf_path": "railway.pdf", "invoice_kind": "铁路电子客票"},
+        {"pdf_path": "special.pdf", "invoice_kind": "专票"},
+    ]
+
+    one_copy, two_copies = split_print_specs(tickets)
+
+    assert one_copy == [{"path": "normal.pdf", "copies": 1}]
+    assert two_copies == [
+        {"path": "railway.pdf", "copies": 1},
+        {"path": "special.pdf", "copies": 1},
+    ]
+    assert tickets[1]["invoice_kind"] == "铁路电子客票"
+
+
+def test_railway_only_still_creates_two_copy_specs():
+    one_copy, two_copies = split_print_specs([
+        {"pdf_path": "railway.pdf", "invoice_kind": "铁路电子客票"},
+    ])
+
+    assert one_copy == []
+    assert two_copies == [{"path": "railway.pdf", "copies": 1}]

@@ -4,6 +4,23 @@ import fitz  # PyMuPDF：show_pdf_page 会正确隔离每张源票的字体/资�
 A4_W, A4_H = 595.0, 842.0
 
 
+def split_print_specs(tickets: list) -> tuple[list, list]:
+    """按打印要求拆分票据，保留各票种原始语义。
+
+    返回 (打印 1 张, 整份打印 2 次)。铁路电子客票与专票采用相同
+    打印份数，但铁路票仍是铁路电子客票，不参与专票税额计算。
+    """
+    one_copy = []
+    two_copies = []
+    for ticket in tickets:
+        spec = {"path": ticket["pdf_path"], "copies": 1}
+        if ticket["invoice_kind"] in {"专票", "铁路电子客票"}:
+            two_copies.append(spec)
+        elif ticket["invoice_kind"] == "普票":
+            one_copy.append(spec)
+    return one_copy, two_copies
+
+
 def _expand(pdf_specs):
     seq = []
     for spec in pdf_specs:

@@ -28,7 +28,7 @@ G0001
 def test_build_copies():
     assert build_copies("普票") == 1
     assert build_copies("专票") == 2
-    assert build_copies("铁路电子客票") == 1
+    assert build_copies("铁路电子客票") == 2
 
 def test_scan_xml_ticket(tmp_path):
     d = tmp_path / "报销1"
@@ -58,6 +58,7 @@ def test_scan_train_pdf_no_xml(tmp_path, monkeypatch):
     t = tickets[0]
     assert t["source_type"] == "train_pdf"
     assert t["invoice_kind"] == "铁路电子客票"
+    assert t["copies"] == 2
     assert t["amount"] == 100.0
     assert t["is_prepaid"] is False
     assert len(t["trips"]) == 1

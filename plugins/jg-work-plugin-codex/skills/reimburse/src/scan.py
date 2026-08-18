@@ -17,7 +17,9 @@ OUTPUT_PREFIXES = ("05-", "09-", "A4")
 
 
 def build_copies(invoice_kind: str) -> int:
-    return 2 if invoice_kind == "专票" else 1
+    # 铁路电子客票需准备两份纸质件：一份粘贴，一份随报销单交财务。
+    # 这里只表示打印份数，不改变票种，也不影响专票税额口径。
+    return 2 if invoice_kind in {"专票", "铁路电子客票"} else 1
 
 
 def _group_key(path: Path) -> str:
