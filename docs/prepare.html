@@ -60,24 +60,24 @@
       <ol class="install-steps">
         <li>
           <span>1</span>
-          <div><h3>添加插件市场</h3><p>打开终端，复制并运行下面的命令。</p><pre><code>codex plugin marketplace add yideng-xl/jg-work-plugin-codex --ref main</code></pre></div>
+          <div><h3>添加 JG Work 插件市场</h3><p>这是一次性配置。打开终端，复制并运行下面的命令。</p><pre><code>codex plugin marketplace add yideng-xl/jg-work-plugin-codex --ref main</code></pre></div>
         </li>
         <li>
           <span>2</span>
-          <div><h3>重启 Codex</h3><p>关闭并重新打开 Codex，让新插件市场生效。</p></div>
+          <div><h3>安装报销插件</h3><p>继续在终端运行下面的命令。</p><pre><code>codex plugin add jg-work-plugin-codex@jg-work</code></pre></div>
         </li>
         <li>
           <span>3</span>
-          <div><h3>安装报销插件</h3><p>打开 <b>Plugins</b>，找到 <b>JG Work</b>，安装 <code>jg-work-plugin-codex</code>。</p></div>
+          <div><h3>重启 Codex</h3><p>完全退出并重新打开 Codex，让插件和报销 Skill 生效。</p></div>
         </li>
         <li>
           <span>4</span>
-          <div><h3>新建任务开始使用</h3><p>新建一个 Codex 任务，说“帮我处理差旅报销”或“帮我处理其他报销”。Codex 会自动使用 <code>reimburse</code> Skill。</p></div>
+          <div><h3>验证并开始使用</h3><p>可运行 <code>codex plugin list --marketplace jg-work</code> 检查安装结果。随后新建 Codex 任务，说“帮我处理差旅报销”或“帮我处理其他报销”。</p></div>
         </li>
       </ol>
       <div class="rule-card install-update">
         <h3>后续更新</h3>
-        <p>每次开始一笔新报销时，Skill 会自动检查更新。没有更新时直接继续；发现更新时会先完成更新，再提示你新建任务重新发起本次报销。</p>
+        <p>自动更新依赖上面配置的 <code>jg-work</code> 插件市场。完成一次安装后，每次开始一笔新报销时，Skill 会自动检查更新。没有更新时直接继续；发现更新时会先完成更新，再提示你新建任务重新发起本次报销。</p>
         <p>如果自动检查失败，会说明原因并继续使用当前版本。需要手动更新时，再运行下面的命令，重启 Codex，并新建任务使用。</p>
         <pre><code>codex plugin marketplace upgrade jg-work</code></pre>
       </div>
