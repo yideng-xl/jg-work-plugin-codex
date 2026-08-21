@@ -382,8 +382,22 @@ def _inject_totals(header_rows, items):
     return out
 
 
+def _half_day_value(label: str, value) -> float:
+    """OA 天数字段只接受非负的 0.5 天倍数。"""
+    if value is None or value == "":
+        raise ValueError(f"差旅报销必须填写{label}")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label}必须是数字") from exc
+    if number < 0 or abs(number * 2 - round(number * 2)) > 1e-9:
+        raise ValueError(f"{label}必须是非负的 0.5 天倍数")
+    return number
+
+
 def default_header(kind: str, reason: str = "", applicant: str | None = None,
-                   fill_date: str = "", title: str = "", doc_no: str = "") -> list:
+                   fill_date: str = "", title: str = "", doc_no: str = "",
+                   travel_days=None, actual_work_days=None) -> list:
     """OA 表头，照真实「技术报销」表单的字段顺序与双列布局。kind: "通用"/"差旅"。
     返回「行」列表：每行 1~2 组 (标签, 值)；单组行整行铺满（报销事由/通用的附件）。
     固定值（费用大区/部门/地区）预填，报销总金额/专票税额合计/费用合计 写表时自动算，
@@ -401,8 +415,12 @@ def default_header(kind: str, reason: str = "", applicant: str | None = None,
         [("报销事由", reason)],                       # 整行铺满
     ]
     if kind == "差旅":
+        travel_days = _half_day_value("出差天数", travel_days)
+        actual_work_days = _half_day_value("实际工作天数", actual_work_days)
+        if actual_work_days > travel_days:
+            raise ValueError("实际工作天数不能大于出差天数")
         rows += [
-            [("出差天数", ""), ("实际工作天数", "")],
+            [("出差天数", travel_days), ("实际工作天数", actual_work_days)],
             [("费用合计", ""), ("增值税专票税额合计", "")],
             [("报销总金额", ""), ("出差申请记录", "")],
             [("报销付款日期", ""), ("附件", "")],

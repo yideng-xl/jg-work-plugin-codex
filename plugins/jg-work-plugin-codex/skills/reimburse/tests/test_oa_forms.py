@@ -147,7 +147,8 @@ def _flatten(rows):
 def test_inject_totals_fills_header():
     items = [{"amount": 981.65, "tax": None}, {"amount": 577.12, "tax": 32.67},
              {"amount": 125.0, "tax": 0.0}]
-    rows = default_header("差旅", reason="郑州集中办公", applicant="张三")
+    rows = default_header("差旅", reason="郑州集中办公", applicant="张三",
+                          travel_days=3, actual_work_days=2.5)
     filled = _flatten(_inject_totals(rows, items))
     assert filled["报销总金额"] == 1683.77       # Σ报销金额
     assert filled["增值税专票税额合计"] == 32.67   # Σ专票税额
@@ -158,7 +159,8 @@ def test_lodging_special_invoice_keeps_tax_in_reimbursement(tmp_path):
     """专票价税合计进入报销金额，只有费用金额扣税。"""
     items = [{"category": "差旅-住宿费", "legs": "1", "amount": 500.0,
               "tax": 50.0, "note": ""}]
-    rows = default_header("差旅", reason="测试出差", applicant="测试用户")
+    rows = default_header("差旅", reason="测试出差", applicant="测试用户",
+                          travel_days=2, actual_work_days=2)
     filled = _flatten(_inject_totals(rows, items))
     assert filled["报销总金额"] == 500.0
     assert filled["增值税专票税额合计"] == 50.0
@@ -192,14 +194,29 @@ def test_infer_uncertain_cells_highlighted_yellow(tmp_path):
 
 
 def test_default_header_travel_has_extra_fields():
-    rows = default_header("差旅", reason="宁波出差", applicant="张三")
+    rows = default_header("差旅", reason="宁波出差", applicant="张三",
+                          travel_days=2.5, actual_work_days=1.5)
     flat = _flatten(rows)
     assert "出差天数" in flat and "实际工作天数" in flat
+    assert flat["出差天数"] == 2.5
+    assert flat["实际工作天数"] == 1.5
     assert "出差申请记录" in flat and "附件" in flat
     assert flat["报销类型"] == "差旅"
     assert flat["费用大区"] == "公共"           # 固定值预填
     # 报销事由 整行铺满（独占一行、单组）
     assert any(len(p) == 1 and p[0][0] == "报销事由" for p in rows)
+
+
+def test_default_header_travel_requires_half_day_values():
+    import pytest
+    with pytest.raises(ValueError, match="出差天数"):
+        default_header("差旅", reason="测试", applicant="张三")
+    with pytest.raises(ValueError, match="0.5 天倍数"):
+        default_header("差旅", reason="测试", applicant="张三",
+                       travel_days=2.3, actual_work_days=2)
+    with pytest.raises(ValueError, match="不能大于"):
+        default_header("差旅", reason="测试", applicant="张三",
+                       travel_days=2, actual_work_days=2.5)
 
 
 def test_default_header_general_has_attachment_fullwidth():
