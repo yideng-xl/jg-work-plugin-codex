@@ -63,19 +63,9 @@ function detectKind(sheetName: string, rows: Matrix): ReimbursementKind {
 
 function parseHeader(rows: Matrix, kind: ReimbursementKind): HeaderData {
   return {
-    title: optionalText(findValue(rows, "标题")),
-    applicant: optionalText(findValue(rows, "申请人")),
-    fillDate: optionalText(findValue(rows, "填报日期")),
-    area: optionalText(findValue(rows, "费用大区")),
-    department: optionalText(findValue(rows, "费用部门")),
     kind,
-    region: optionalText(findValue(rows, "费用地区")),
-    category: optionalText(findValue(rows, "报销分类")),
-    contract: optionalText(findValue(rows, "销售合同")),
-    reason: optionalText(findValue(rows, "报销事由")),
     travelDays: kind === "travel" ? money(findValue(rows, "出差天数")) : undefined,
     workDays: kind === "travel" ? money(findValue(rows, "实际工作天数")) : undefined,
-    travelRequest: optionalText(findValue(rows, "出差申请记录")),
     paymentDate: optionalText(findValue(rows, "报销付款日期")),
     expenseTotal: money(findValue(rows, "费用合计")),
     taxTotal: money(findValue(rows, "增值税专票税额合计")),

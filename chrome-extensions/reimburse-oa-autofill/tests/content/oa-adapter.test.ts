@@ -14,7 +14,17 @@ vi.mock("../../src/content/detail-table", () => ({
   }),
 }));
 vi.mock("../../src/content/travel-request", () => ({
-  selectTravelRequest: vi.fn(async () => ({ status: "selected", label: "2099-01-09 出差申请" })),
+  selectTravelRequest: vi.fn(async (_doc: Document, _date: string, applicant: string) => ({
+    status: "selected",
+    label: "CCSQ209901090001",
+    applicationDate: "2099-01-09",
+    selection: {
+      code: "CCSQ209901090001",
+      applicationDate: "2099-01-09",
+      applicant,
+      details: [{ label: "申请人", value: applicant }, { label: "出差事由", value: "测试出差" }],
+    },
+  })),
 }));
 
 function workbook(kind: "travel" | "general" = "travel"): ReimbursementWorkbook {
@@ -61,7 +71,7 @@ describe("fillReimbursementPage", () => {
     expect(operations).toEqual([]);
   });
 
-  it("verifies readonly fields, skips blanks, and fills editable values", async () => {
+  it("ignores Excel header values, uses the OA applicant, and fills editable values", async () => {
     const doc = makeOaDocument();
     setTotals(doc);
     const data = workbook();
@@ -75,6 +85,8 @@ describe("fillReimbursementPage", () => {
     expect(result.fields).toContainEqual(expect.objectContaining({ field: "travelRequest", status: "filled" }));
     expect(result.fields.some((field) => field.field === "reason")).toBe(false);
     expect(result.fields.some((field) => field.field === "fillDate")).toBe(false);
+    expect(result.travelRequest?.applicant).toBe("测试用户");
+    expect(result.travelRequest?.details).toContainEqual({ label: "出差事由", value: "测试出差" });
     expect((doc.getElementById("field10239") as HTMLInputElement).value).toBe("3");
     expect(operations).toEqual(["wait-linked-trip", "trips", "expenses"]);
     expect(result.totals.match).toBe(true);
@@ -90,12 +102,14 @@ describe("fillReimbursementPage", () => {
     expect(operations).toEqual(["expenses"]);
   });
 
-  it("stops when a readonly value differs", async () => {
+  it("does not compare Excel applicant or department with OA", async () => {
     const data = workbook();
     data.header.applicant = "另一个人";
-    const result = await fillReimbursementPage(makeOaDocument(), data, { trips: "append", expenses: "append" });
-    expect(result.ok).toBe(false);
-    expect(result.fields).toContainEqual(expect.objectContaining({ field: "applicant", status: "error" }));
-    expect(operations).toEqual([]);
+    data.header.department = "另一个部门";
+    const doc = makeOaDocument();
+    setTotals(doc);
+    const result = await fillReimbursementPage(doc, data, { trips: "append", expenses: "append" });
+    expect(result.ok).toBe(true);
+    expect(result.fields.some((field) => field.field === "applicant" || field.field === "department")).toBe(false);
   });
 });

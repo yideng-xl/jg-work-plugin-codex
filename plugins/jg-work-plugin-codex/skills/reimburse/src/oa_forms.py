@@ -30,8 +30,6 @@ from src.summary_io import _THIN, _BORDER_ALL, _CENTER, _HCENTER, YELLOW
 _LEFT = Alignment(horizontal="left", vertical="center")
 
 # 当前模板的组织字段默认值。申请人不在这里固定，必须由本次报销信息传入。
-_FIXED = {"费用大区": "公共", "费用部门": "产品部", "费用地区": "总部"}
-
 _F_TITLE = Font(name="宋体", size=18, bold=True)
 _F_BAND = Font(name="宋体", size=14, bold=True)
 _F_HEAD = Font(name="宋体", size=11, bold=True)
@@ -87,6 +85,12 @@ def _title(ws, row, ncols, text):
         ws.cell(row=row, column=col).border = _BORDER_ALL
 
 
+_OA_OWNED_HEADER_FIELDS = {
+    "标题", "报销单号", "申请人", "填报日期", "费用大区", "费用部门",
+    "报销类型", "费用地区", "报销分类", "销售合同", "报销事由",
+}
+
+
 def _write_header_block(ws, start_row, ncols, rows):
     """表头信息区，照真实 OA 单双列布局。rows 是「行」列表，每行是 1~2 组
     (标签, 值)：两组 → 各占半宽；一组 → 值整行铺满（如 报销事由/附件）。
@@ -105,7 +109,7 @@ def _write_header_block(ws, start_row, ncols, rows):
             vcell.font, vcell.alignment = _F_BODY, _LEFT
             for col in range(1, ncols + 1):
                 ws.cell(row=r, column=col).border = _BORDER_ALL
-            if val in (None, ""):
+            if val in (None, "") and label not in _OA_OWNED_HEADER_FIELDS:
                 vcell.fill = YELLOW
         else:                                # 双列：标签+半宽值 ×2
             for j, (label, val) in enumerate(pairs):
@@ -120,7 +124,7 @@ def _write_header_block(ws, start_row, ncols, rows):
                 vcell.font, vcell.alignment = _F_BODY, _CENTER
                 for col in range(base, base + half):
                     ws.cell(row=r, column=col).border = _BORDER_ALL
-                if val in (None, ""):
+                if val in (None, "") and label not in _OA_OWNED_HEADER_FIELDS:
                     vcell.fill = YELLOW
             for col in range(2 * half + 1, ncols + 1):   # 尾列补边框
                 ws.cell(row=r, column=col).border = _BORDER_ALL
@@ -400,19 +404,14 @@ def default_header(kind: str, reason: str = "", applicant: str | None = None,
                    travel_days=None, actual_work_days=None) -> list:
     """OA 表头，照真实「技术报销」表单的字段顺序与双列布局。kind: "通用"/"差旅"。
     返回「行」列表：每行 1~2 组 (标签, 值)；单组行整行铺满（报销事由/通用的附件）。
-    固定值（费用大区/部门/地区）预填，报销总金额/专票税额合计/费用合计 写表时自动算，
-    其余留空写表时标黄。"""
-    if not applicant or not applicant.strip():
-        raise ValueError("必须传入本次报销的实际申请人")
-
-    f = _FIXED
+    OA 已有或不可编辑的表头字段留空；报销总金额/专票税额合计/费用合计写表时自动算。"""
     rows = [
-        [("标题", title), ("报销单号", doc_no)],
-        [("申请人", applicant.strip()), ("填报日期", fill_date)],
-        [("费用大区", f["费用大区"]), ("费用部门", f["费用部门"])],
-        [("报销类型", kind), ("费用地区", f["费用地区"])],
+        [("标题", ""), ("报销单号", "")],
+        [("申请人", ""), ("填报日期", "")],
+        [("费用大区", ""), ("费用部门", "")],
+        [("报销类型", ""), ("费用地区", "")],
         [("报销分类", ""), ("销售合同", "")],
-        [("报销事由", reason)],                       # 整行铺满
+        [("报销事由", "")],                         # 整行铺满
     ]
     if kind == "差旅":
         travel_days = _half_day_value("出差天数", travel_days)

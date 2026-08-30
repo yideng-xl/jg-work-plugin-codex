@@ -4,21 +4,12 @@ import type {
   FillResult,
   HeaderData,
   ReimbursementWorkbook,
+  TravelRequestSelection,
 } from "../shared/types";
 import { applyExpenses, applyTrips, tripRowIndexes, waitForLinkedTripRows } from "./detail-table";
 import { fieldValueMatches, setOaFieldValue } from "./oa-field-api";
 import { inspectPage, OA_FIELDS } from "./page-contract";
 import { selectTravelRequest } from "./travel-request";
-
-const READONLY_FIELDS: Array<[keyof HeaderData, keyof typeof OA_FIELDS]> = [
-  ["applicant", "applicant"],
-  ["area", "area"],
-  ["department", "department"],
-  ["kind", "kind"],
-  ["region", "region"],
-  ["category", "category"],
-  ["contract", "contract"],
-];
 
 const EDITABLE_FIELDS: Array<[keyof HeaderData, keyof typeof OA_FIELDS]> = [
   ["travelDays", "travelDays"],
@@ -85,26 +76,17 @@ export async function fillReimbursementPage(
     return fail(fields, "kind", "Excel 报销类型与 OA 页面不一致。", excelTotals);
   }
 
-  for (const [headerKey, fieldKey] of READONLY_FIELDS) {
-    const expected = displayValue(headerKey, workbook.header[headerKey]);
-    if (!expected) {
-      fields.push({ field: fieldKey, status: "skipped" });
-      continue;
-    }
-    const actual = inspection.readonlyFields[fieldKey]?.trim() ?? "";
-    if (actual !== expected) {
-      return fail(fields, fieldKey, `Excel 为‘${expected}’，OA 为‘${actual}’。`, excelTotals);
-    }
-    fields.push({ field: fieldKey, status: "verified" });
-  }
-
+  let selectedTravelRequest: TravelRequestSelection | undefined;
   try {
     if (workbook.kind === "travel") {
       let linkedTripRows = new Set<string>();
       if (workbook.trips[0]?.departureDate) {
         const before = tripRowIndexes(doc);
-        const request = await selectTravelRequest(doc, workbook.trips[0].departureDate);
+        const applicant = inspection.readonlyFields.applicant?.trim() ?? "";
+        if (!applicant) return fail(fields, "travelRequest", "未读取到当前 OA 报销人，已停止选择出差申请记录。", excelTotals);
+        const request = await selectTravelRequest(doc, workbook.trips[0].departureDate, applicant);
         if (request.status === "selected") {
+          selectedTravelRequest = request.selection;
           linkedTripRows = await waitForLinkedTripRows(doc, before);
           fields.push({
             field: "travelRequest",
@@ -114,7 +96,11 @@ export async function fillReimbursementPage(
         } else fields.push({
           field: "travelRequest",
           status: "skipped",
-          message: request.status === "ambiguous" ? "最近日期有多条记录，请手动选择。" : "没有找到出发日前的记录，请手动选择。",
+          message: request.status === "ambiguous"
+            ? "同一报销人的最近日期有多条记录，请手动选择。"
+            : request.status === "applicant-missing"
+              ? `没有找到申请人为‘${applicant}’的出差记录，请手动选择。`
+              : "没有找到该报销人出发日前的记录，请手动选择。",
         });
       }
       await applyTrips(doc, workbook.trips, modes.trips, linkedTripRows);
@@ -155,5 +141,5 @@ export async function fillReimbursementPage(
   const oaTotals = await waitForTotals(doc);
   const match = moneyMatches(excelTotals, oaTotals);
   if (!match) fields.push({ field: "totals", status: "error", message: "Excel 与 OA 合计不一致。" });
-  return { ok: match, fields, totals: { excel: excelTotals, oa: oaTotals, match } };
+  return { ok: match, fields, totals: { excel: excelTotals, oa: oaTotals, match }, travelRequest: selectedTravelRequest };
 }

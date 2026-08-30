@@ -8,10 +8,11 @@ describe("parseWorkbook", () => {
 
     expect(result.kind).toBe("travel");
     expect(result.header).toMatchObject({
-      applicant: "测试用户",
       workDays: 3,
       reimbursementTotal: 950,
     });
+    expect(result.header.applicant).toBeUndefined();
+    expect(result.header.department).toBeUndefined();
     expect(result.trips).toHaveLength(2);
     expect(result.trips[0]).toEqual({
       departureDate: "2099-01-10",

@@ -19,6 +19,7 @@ h1 {
 }
 
 h2 { margin: 0 0 10px; font-size: 15px; }
+h3 { margin: 12px 0 4px; font-size: 14px; }
 p { margin: 6px 0; line-height: 1.5; }
 header > p { color: #64748b; font-size: 13px; }
 
@@ -30,6 +31,9 @@ header > p { color: #64748b; font-size: 13px; }
 dl { margin: 8px 0 0; }
 dl div { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
 dt { color: #64748b; } dd { margin: 0; text-align: right; }
+.request-details div { align-items: flex-start; border-top: 1px solid #eef2f6; }
+.request-details dt { flex: 0 0 38%; }
+.request-details dd { overflow-wrap: anywhere; }
 .mode legend { padding: 0 4px; font-weight: 600; }
 .mode label { margin-right: 16px; }
 .mode input { margin-right: 4px; }

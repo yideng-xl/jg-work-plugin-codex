@@ -1,7 +1,14 @@
-export interface TravelRequestCandidate { row: HTMLTableRowElement; date: string }
+import type { TravelRequestDetail, TravelRequestSelection } from "../shared/types";
+
+export interface TravelRequestCandidate {
+  row: HTMLTableRowElement;
+  date: string;
+  applicant: string;
+  selection: TravelRequestSelection;
+}
 export type TravelRequestChoice =
   | { status: "selected"; candidate: TravelRequestCandidate }
-  | { status: "missing" | "ambiguous" };
+  | { status: "missing" | "ambiguous" | "applicant-missing" };
 
 function dateKey(value: string): number | undefined {
   const match = value.match(/(\d{4})\s*(?:-|\/|年)\s*(\d{1,2})\s*(?:-|\/|月)\s*(\d{1,2})\s*日?/);
@@ -10,15 +17,70 @@ function dateKey(value: string): number | undefined {
   return Number.isFinite(key) ? key : undefined;
 }
 
-export function chooseNearestPriorCandidate(baseDate: string, candidates: TravelRequestCandidate[]): TravelRequestChoice {
+function normalizedName(value: string): string {
+  return value.replace(/\s+/g, "").trim();
+}
+
+export function chooseNearestPriorCandidate(
+  baseDate: string,
+  applicant: string,
+  candidates: TravelRequestCandidate[],
+): TravelRequestChoice {
   const base = dateKey(baseDate);
   if (!base) return { status: "missing" };
-  const eligible = candidates.map((candidate) => ({ candidate, key: dateKey(candidate.date) }))
+  const expectedApplicant = normalizedName(applicant);
+  if (!expectedApplicant) return { status: "applicant-missing" };
+  const sameApplicant = candidates.filter((candidate) => normalizedName(candidate.applicant) === expectedApplicant);
+  if (!sameApplicant.length) return { status: "applicant-missing" };
+  const eligible = sameApplicant.map((candidate) => ({ candidate, key: dateKey(candidate.date) }))
     .filter((item): item is { candidate: TravelRequestCandidate; key: number } => item.key !== undefined && item.key < base);
   if (!eligible.length) return { status: "missing" };
   const nearest = Math.max(...eligible.map((item) => item.key));
   const matches = eligible.filter((item) => item.key === nearest);
   return matches.length === 1 ? { status: "selected", candidate: matches[0].candidate } : { status: "ambiguous" };
+}
+
+function directCells(row: HTMLTableRowElement): HTMLTableCellElement[] {
+  return Array.from(row.querySelectorAll<HTMLTableCellElement>(":scope > th, :scope > td"));
+}
+
+function headerLabels(row: HTMLTableRowElement): string[] {
+  const table = row.closest("table");
+  if (!table) return [];
+  const rows = Array.from(table.querySelectorAll<HTMLTableRowElement>("tr"));
+  const rowIndex = rows.indexOf(row);
+  const candidates = rows.slice(0, Math.max(0, rowIndex)).reverse();
+  const header = candidates.find((candidate) => {
+    const values = directCells(candidate).map((cell) => cell.textContent?.replace(/\s+/g, "").trim() ?? "");
+    return values.some((value) => value.includes("申请日期")) && values.some((value) => value.includes("申请人"));
+  });
+  return header ? directCells(header).map((cell) => cell.textContent?.replace(/\s+/g, " ").trim() ?? "") : [];
+}
+
+export function travelRequestCandidateFromRow(row: HTMLTableRowElement): TravelRequestCandidate | undefined {
+  const cells = directCells(row);
+  const headers = headerLabels(row);
+  const details: TravelRequestDetail[] = cells.map((cell, index) => ({
+    label: headers[index] || `第 ${index + 1} 列`,
+    value: cell.getAttribute("stsdata")?.trim() || cell.textContent?.replace(/\s+/g, " ").trim() || "",
+  })).filter((item) => item.value);
+  const valueFor = (label: string) => details.find((item) => item.label.replace(/\s+/g, "").includes(label))?.value ?? "";
+  const text = row.textContent?.trim() ?? "";
+  const date = valueFor("申请日期") || text.match(/\d{4}\s*(?:-|\/|年)\s*\d{1,2}\s*(?:-|\/|月)\s*\d{1,2}\s*日?/)?.[0] || "";
+  const applicant = valueFor("申请人");
+  if (!date) return undefined;
+  const code = cells[0]?.getAttribute("stsdata")?.trim() || valueFor("申请记录") || undefined;
+  return {
+    row,
+    date,
+    applicant,
+    selection: {
+      code,
+      applicationDate: date.replace(/年|月/g, "-").replace(/日/g, "").replace(/\//g, "-"),
+      applicant,
+      details,
+    },
+  };
 }
 
 export function isTravelRequestRow(row: HTMLTableRowElement): boolean {
@@ -44,18 +106,26 @@ async function waitForRows(doc: Document): Promise<HTMLTableRowElement[]> {
   throw new Error("等待出差申请记录候选项超时。");
 }
 
-export async function selectTravelRequest(doc: Document, departureDate: string): Promise<{ status: "selected" | "missing" | "ambiguous"; label?: string; applicationDate?: string }> {
+export async function selectTravelRequest(
+  doc: Document,
+  departureDate: string,
+  applicant: string,
+): Promise<{
+  status: "selected" | "missing" | "ambiguous" | "applicant-missing";
+  label?: string;
+  applicationDate?: string;
+  selection?: TravelRequestSelection;
+}> {
   const span = doc.getElementById("field13685span");
   const button = span?.querySelector<HTMLElement>("button");
   if (!button) throw new Error("未找到出差申请记录搜索按钮。");
   button.click();
   const rows = await waitForRows(doc);
   const candidates = rows.flatMap((row) => {
-    const text = row.textContent?.trim() ?? "";
-    const match = text.match(/\d{4}\s*(?:-|\/|年)\s*\d{1,2}\s*(?:-|\/|月)\s*\d{1,2}\s*日?/);
-    return match ? [{ row, date: match[0] }] : [];
+    const candidate = travelRequestCandidateFromRow(row);
+    return candidate ? [candidate] : [];
   });
-  const choice = chooseNearestPriorCandidate(departureDate, candidates);
+  const choice = chooseNearestPriorCandidate(departureDate, applicant, candidates);
   if (choice.status === "selected") {
     const cell = choice.candidate.row.querySelector<HTMLElement>("td");
     if (!cell) throw new Error("出差申请记录候选行缺少选择单元格。");
@@ -68,8 +138,9 @@ export async function selectTravelRequest(doc: Document, departureDate: string):
       if (field instanceof HTMLInputElement && field.value) {
         return {
           status: "selected",
-          label: choice.candidate.row.querySelector("td")?.getAttribute("stsdata")?.trim(),
-          applicationDate: choice.candidate.date.replace(/年|月/g, "-").replace(/日/g, "").replace(/\//g, "-"),
+          label: choice.candidate.selection.code,
+          applicationDate: choice.candidate.selection.applicationDate,
+          selection: choice.candidate.selection,
         };
       }
       await new Promise((resolve) => setTimeout(resolve, 25));

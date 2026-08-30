@@ -8,13 +8,6 @@ function closeEnough(left: number, right: number): boolean {
 
 export function validateWorkbook(data: ReimbursementWorkbook): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  const warning = (field: string) => issues.push({
-    level: "warning",
-    field,
-    message: "Excel 未提供，插件将保留 OA 当前值",
-  });
-  if (!data.header.category) warning("报销分类");
-  if (data.kind === "travel" && !data.header.travelRequest) warning("出差申请记录");
   if (data.expenses.length === 0) {
     issues.push({ level: "error", field: "报销费用明细", message: "Excel 中没有费用明细" });
     return issues;

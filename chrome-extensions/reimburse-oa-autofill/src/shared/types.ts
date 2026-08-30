@@ -22,10 +22,23 @@ export interface FieldResult {
   message?: string;
 }
 
+export interface TravelRequestDetail {
+  label: string;
+  value: string;
+}
+
+export interface TravelRequestSelection {
+  code?: string;
+  applicationDate: string;
+  applicant: string;
+  details: TravelRequestDetail[];
+}
+
 export interface FillResult {
   ok: boolean;
   fields: FieldResult[];
   totals: { excel: number[]; oa: number[]; match: boolean };
+  travelRequest?: TravelRequestSelection;
 }
 
 export type ExtensionMessage =

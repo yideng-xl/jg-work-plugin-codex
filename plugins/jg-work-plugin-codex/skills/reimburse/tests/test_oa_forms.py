@@ -66,18 +66,36 @@ def test_general_detail_with_header_block(tmp_path):
     ws = openpyxl.load_workbook(str(out)).active
     # 表头区把明细往下推：第 1 行大标题，之后是表头信息区
     flat = [c.value for row in ws.iter_rows() for c in row if c.value is not None]
-    assert "申请人" in flat and "张三" in flat
-    assert "报销类型" in flat and "通用" in flat
-    assert "claude 订阅" in flat
+    assert "申请人" in flat and "张三" not in flat
+    assert "报销类型" in flat and "通用" not in flat
+    assert "claude 订阅" not in flat
     # 明细表头仍然存在（被推到更下面）
     assert any([ws.cell(row=r, column=c).value for c in range(1, 8)][:2]
                == ["序号", "费用分类"] for r in range(1, ws.max_row + 1))
 
 
-def test_default_header_requires_applicant():
-    import pytest
-    with pytest.raises(ValueError, match="实际申请人"):
-        default_header("通用")
+def test_default_header_leaves_oa_owned_fields_blank():
+    flat = _flatten(default_header("通用", reason="测试事由", applicant="测试用户",
+                                   fill_date="2099-01-01", title="测试标题", doc_no="JSBX1"))
+    for label in ["标题", "报销单号", "申请人", "填报日期", "费用大区", "费用部门",
+                  "报销类型", "费用地区", "报销分类", "销售合同", "报销事由"]:
+        assert flat[label] == ""
+
+
+def test_oa_owned_header_fields_are_blank_without_manual_fill_highlight(tmp_path):
+    out = tmp_path / "OA表头留空.xlsx"
+    write_oa_general_detail(
+        [{"category": "会议费", "date": "2099-01-01", "amount": 100, "tax": 0, "note": ""}],
+        str(out),
+        header_fields=default_header("通用", reason="测试", applicant="测试用户"),
+    )
+    ws = openpyxl.load_workbook(str(out)).active
+    labels = {cell.value: cell.coordinate for row in ws.iter_rows() for cell in row if cell.value}
+    for label in ["标题", "报销单号", "申请人", "填报日期", "费用部门", "报销事由"]:
+        label_cell = ws[labels[label]]
+        value_cell = ws.cell(row=label_cell.row, column=label_cell.column + 1)
+        assert value_cell.value is None
+        assert value_cell.fill.fill_type is None
 
 
 def test_travel_detail_two_tables(tmp_path):
@@ -201,8 +219,8 @@ def test_default_header_travel_has_extra_fields():
     assert flat["出差天数"] == 2.5
     assert flat["实际工作天数"] == 1.5
     assert "出差申请记录" in flat and "附件" in flat
-    assert flat["报销类型"] == "差旅"
-    assert flat["费用大区"] == "公共"           # 固定值预填
+    assert flat["报销类型"] == ""
+    assert flat["费用大区"] == ""
     # 报销事由 整行铺满（独占一行、单组）
     assert any(len(p) == 1 and p[0][0] == "报销事由" for p in rows)
 

@@ -4,15 +4,10 @@ import { validateWorkbook } from "../../src/excel/validate-workbook";
 import { makeTravelWorkbook } from "../fixtures/workbooks";
 
 describe("validateWorkbook", () => {
-  it("accepts the valid travel workbook with optional-field warnings", () => {
+  it("accepts a valid travel workbook without OA-owned header warnings", () => {
     const issues = validateWorkbook(parseWorkbook(makeTravelWorkbook()));
 
-    expect(issues.filter((issue) => issue.level === "error")).toEqual([]);
-    expect(issues).toContainEqual({
-      level: "warning",
-      field: "报销分类",
-      message: "Excel 未提供，插件将保留 OA 当前值",
-    });
+    expect(issues).toEqual([]);
   });
 
   it("rejects inconsistent money", () => {

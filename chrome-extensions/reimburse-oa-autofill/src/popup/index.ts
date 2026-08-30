@@ -18,9 +18,11 @@ const SUPPORTED_FILES = new Set([
 export function completionMessage(kind: "travel" | "general", result: FillResult): string | undefined {
   if (!result.ok) return undefined;
   if (kind === "general") return "OA 已填写完成，请检查后手动提交。插件未保存或提交报销单。";
-  const request = result.fields.find((field) => field.field === "travelRequest");
-  return request?.status === "filled"
-    ? `OA 已填写完成。出差申请记录申请日期：${request.message || "未识别"}，请检查是否正确。插件未保存或提交报销单。`
+  const request = result.travelRequest;
+  const detailText = request?.details.filter((item) => item.value)
+    .map((item) => `${item.label}：${item.value}`).join("\n");
+  return request
+    ? `OA 已填写完成。已选择的出差申请记录：\n${detailText || `申请日期：${request.applicationDate}`}\n请检查是否正确。插件未保存或提交报销单。`
     : "OA 明细已填写，请手动选择并检查出差申请记录。插件未保存或提交报销单。";
 }
 
@@ -46,11 +48,13 @@ function resultHtml(result?: FillResult): string {
   const rows = result.fields.filter((field) => field.status === "error")
     .map((field) => `<li class="error">${escapeHtml(field.field)}: ${escapeHtml(field.message)}</li>`).join("");
   const formatTotals = (values: number[]) => values.map(money).join(" / ");
-  const requestDate = result.fields.find((field) => field.field === "travelRequest" && field.status === "filled")?.message;
+  const request = result.travelRequest;
+  const requestDetails = request?.details.filter((item) => item.value)
+    .map((item) => `<div><dt>${escapeHtml(item.label)}</dt><dd>${escapeHtml(item.value)}</dd></div>`).join("");
   return `<section class="result"><h2>填写结果</h2>
     <p class="${result.ok ? "success" : "error"}">${result.ok ? "已填入，请在 OA 中检查。" : "填写未全部完成，请按下方信息检查。"}</p>
     ${rows ? `<ul>${rows}</ul>` : ""}
-    ${requestDate ? `<p>出差申请日期：${escapeHtml(requestDate)}</p>` : ""}
+    ${request ? `<h3>已选择的出差申请记录</h3><dl class="request-details">${requestDetails || `<div><dt>申请日期</dt><dd>${escapeHtml(request.applicationDate)}</dd></div>`}</dl>` : ""}
     <p>Excel: ${formatTotals(result.totals.excel)}</p><p>OA: ${formatTotals(result.totals.oa)}</p>
   </section>`;
 }
@@ -63,7 +67,7 @@ export function renderPopup(root: HTMLElement, state: PopupState): void {
   const preview = workbook ? `<section class="card"><h2>文件预览</h2>
     <p class="filename">${escapeHtml(state.fileName)}</p>
     <dl><div><dt>类型</dt><dd>${workbook.kind === "travel" ? "差旅" : "通用"}</dd></div>
-      <div><dt>申请人</dt><dd>${escapeHtml(workbook.header.applicant || "未填")}</dd></div>
+      <div><dt>报销人</dt><dd>${escapeHtml(state.page?.readonlyFields.applicant || "读取 OA 页面")}</dd></div>
       <div><dt>明细</dt><dd>行程 ${workbook.trips.length} 行 · 费用 ${workbook.expenses.length} 行</dd></div>
       <div><dt>金额</dt><dd>报销 ${money(workbook.header.reimbursementTotal)} · 税额 ${money(workbook.header.taxTotal)}</dd></div></dl>
     ${issues ? `<ul class="issues">${issues}</ul>` : ""}</section>` : "";

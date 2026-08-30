@@ -14,7 +14,7 @@ function state(): PopupState {
     },
     issues: [{ level: "warning", field: "出差申请记录", message: "Excel 未提供" }],
     page: {
-      supported: true, kind: "travel", requestNumber: "JSBX1", readonlyFields: {},
+      supported: true, kind: "travel", requestNumber: "JSBX1", readonlyFields: { applicant: "OA 用户" },
       tripHasData: true, expenseHasData: true,
     },
     modes: {},
@@ -26,6 +26,10 @@ describe("renderPopup", () => {
     expect(completionMessage("travel", {
       ok: true, fields: [{ field: "travelRequest", status: "filled", message: "2026-07-29" }],
       totals: { excel: [], oa: [], match: true },
+      travelRequest: {
+        applicationDate: "2026-07-29", applicant: "OA 用户",
+        details: [{ label: "申请日期", value: "2026-07-29" }, { label: "出差事由", value: "项目交流" }],
+      },
     })).toContain("申请日期：2026-07-29");
   });
   it("shows workbook preview and independent existing-data choices", () => {
@@ -33,7 +37,7 @@ describe("renderPopup", () => {
     renderPopup(root, state());
     expect(root.textContent).toContain("09-终稿-OA差旅报销明细.xlsx");
     expect(root.textContent).toContain("差旅");
-    expect(root.textContent).toContain("测试用户");
+    expect(root.textContent).toContain("OA 用户");
     expect(root.textContent).toContain("行程 1 行");
     expect(root.textContent).toContain("费用 1 行");
     expect(root.textContent).toContain("报销 100.00");
@@ -66,8 +70,16 @@ describe("renderPopup", () => {
       ok: true,
       fields: [{ field: "travelRequest", status: "filled", message: "2026-07-29" }],
       totals: { excel: [90, 10, 100], oa: [90, 10, 100], match: true },
+      travelRequest: {
+        applicationDate: "2026-07-29", applicant: "OA 用户",
+        details: [{ label: "申请日期", value: "2026-07-29" }, { label: "出差事由", value: "项目交流" }],
+      },
     };
     renderPopup(root, completed);
-    expect(root.textContent).toContain("出差申请日期：2026-07-29");
+    expect(root.textContent).toContain("已选择的出差申请记录");
+    expect(root.textContent).toContain("申请日期");
+    expect(root.textContent).toContain("2026-07-29");
+    expect(root.textContent).toContain("出差事由");
+    expect(root.textContent).toContain("项目交流");
   });
 });

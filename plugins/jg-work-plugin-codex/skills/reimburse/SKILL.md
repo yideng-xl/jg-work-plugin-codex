@@ -217,9 +217,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 
      **别弄混两类明细**：OA 的「报销费用明细」是**一个费用分类一行**（同类发票合计成一行，逐票明细在交通费明细表/A4 发票拼贴那边）；而交通费明细表（`write_travel_detail`）是**一票/一段行程一行**。两个 writer 分工不同。`write_oa_general_detail`/`write_oa_travel_detail` 默认 `aggregate=True`，内部按费用分类聚合，所以你把 `read_summary` 的逐票行原样传进去就行，不用自己先合并。
 
-     表头信息区用 `default_header(kind, reason, applicant, fill_date, title, doc_no)` 生成（`kind` 传 `"通用"`/`"差旅"`；`applicant` 必须传本次实际报销人，不能使用固定姓名；其余未知项留空，写表时标黄让用户补）。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。这里的 `items[].amount` 仍是价税合计：OA 报销金额直接取 `amount`，费用金额才自动计算为 `amount - tax`。合计行是 SUM 公式。
-
-     **订阅类报销事由必须写金额构成**：逐项写“订阅名称 + 费用月份 + 原币金额”，保留实际订阅币种；美元写“美元”，人民币写“元”，不要把原币金额全部改写成人民币。美元费用同时写确认汇率和折算金额；支付平台已有人民币实付时一并写出。末尾写人民币报销合计。例如：`订阅费用：服务 A 10 美元（按 7.00 折算 70.00 元）；服务 B 20.00 元；合计 90.00 元。`
+     表头信息区用 `default_header(kind, ...)` 生成。标题、报销单号、申请人、填报日期、费用大区、费用部门、报销类型、费用地区、报销分类、销售合同、报销事由都由 OA 当前单据决定，OA 明细 Excel 中只保留字段位置，值留空。Chrome 插件不得拿这些字段与 OA 比较。表头的 **报销总金额/增值税专票税额合计/费用合计三个合计写表时自动按明细算**（`_inject_totals`），不用手填。这里的 `items[].amount` 仍是价税合计：OA 报销金额直接取 `amount`，费用金额才自动计算为 `amount - tax`。合计行是 SUM 公式。
 
      **订阅类费用发生日期取实际 AI 订阅时间**：填主要 AI 订阅的实际扣费/生效日期，不填用于抵票的云资源或物业发票日期。同批包含云资源费用时，也不改用云资源的订阅时间；各项费用月份和金额在报销事由中列明。
 
@@ -230,12 +228,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
      # 通用（如抵票/市内交通）
      items = [{"category": r["category"], "date": r["date"], "amount": r["amount"],
                "tax": r["tax"], "note": r["note"]} for r in rows]  # rows 来自 read_summary，已剔预充值
-     hdr = default_header(
-         "通用",
-         reason="<报销事由>",
-         applicant="<本次实际报销人>",
-         fill_date="<填报日>",
-     )
+     hdr = default_header("通用")
      write_oa_general_detail(items, "<输出目录>/09-终稿-OA报销金额明细.xlsx", header_fields=hdr)
 
      # 差旅：先把交通行拼成 trips。高铁/飞机到达时间必须先查公开时刻表；
@@ -245,8 +238,6 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
      write_oa_travel_detail(trips, items, "<输出目录>/09-终稿-OA差旅报销明细.xlsx",
                             header_fields=default_header(
                                 "差旅",
-                                reason="..",
-                                applicant="<本次实际报销人>",
                                 travel_days=<按制度 4.3 计算的出差天数>,
                                 actual_work_days=<扣除提前到达和休假后的实际工作天数>,
                             ))
@@ -269,8 +260,7 @@ r = summarize_folder("<报销文件夹>")   # 穿透任意 1~2 级嵌套
 - 高铁/飞机按票面日期和车次/航班号查询公开计划时刻，校正方向并填写计划到达时间；终稿不保留解析、纠正或估算过程说明。
 - A4 拼贴先分打印 1 张/整份打印 2 次，再按高铁、飞机、打车、住宿、其他分组排列；同类型票据连续放置。
 - 美元票金额是公式，用户须在 Excel 里打开保存过一次，`read_summary` 才能读到算好的数。
-- 订阅类 OA 报销事由逐项写原始币种金额；美元附汇率、折算金额或人民币实付，末尾写人民币报销合计。
 - 订阅类费用发生日期取主要 AI 订阅的实际扣费/生效日期，不取抵票发票或同批云资源的日期。
-- 交通费明细和 OA 表头必须写本次实际报销人。用户未提供姓名时必须主动询问；生成函数强制传入 `applicant`，姓名未确认时停止生成。过滤交通类行（含排除预充值票）是 Claude 的活，`write_travel_detail` 不过滤。交通费明细严格照 `90-invoice/模板/交通费报销明细表.xlsx`（宋体/边框/列宽/行高/SUM/报销人无边框），别改样式。
+- 交通费明细必须写本次实际报销人。用户未提供姓名时必须主动询问；`write_travel_detail` 强制传入 `applicant`。OA 明细 Excel 的申请人等 OA 表头字段留空。Chrome 插件从当前 OA 页面读取报销人，用于筛选同名出差申请记录。过滤交通类行（含排除预充值票）是 Claude 的活，`write_travel_detail` 不过滤。交通费明细严格照 `90-invoice/模板/交通费报销明细表.xlsx`（宋体/边框/列宽/行高/SUM/报销人无边框），别改样式。
 - OA 报销金额明细（`oa_forms.py`）：通用/差旅两版，费用金额=报销金额−专票税额（自动），合计 SUM 公式；表头信息区 `default_header` 生成、空值标黄；差旅行程缺列 `infer_trip_defaults` 推断标黄；行程列 legs 是判断题需 Claude/用户定；住宿明细未做。
 - OFD 文件不解析（发票通常 xml/pdf/ofd 三件套，只用 xml+pdf）。
