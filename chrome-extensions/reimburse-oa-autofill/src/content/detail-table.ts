@@ -1,6 +1,6 @@
 import type { DetailMode, ExpenseRow, ReimbursementKind, TripRow } from "../shared/types";
 import { fieldValueMatches, setOaFieldValue } from "./oa-field-api";
-import { OA_TABLES } from "./page-contract";
+import { expenseTable, OA_TABLES } from "./page-contract";
 import { selectExactDialogValue } from "./search-dialog";
 
 function dataRows(table: Element): HTMLTableRowElement[] {
@@ -234,31 +234,35 @@ export async function applyExpenses(
   mode: DetailMode,
 ): Promise<void> {
   if (mode === "cancel" || rows.length === 0) return;
-  const table = doc.getElementById(OA_TABLES.expenses);
+  const table = expenseTable(doc, kind);
   if (!table) throw new Error("当前 OA 页面没有报销费用明细表。");
   const targetRows = await prepare(table, rows.length, mode);
+
+  const fields = kind === "travel"
+    ? { category: "field9758", detail: "field9754", reimbursement: "field9755", tax: "field9756", note: "field9759" }
+    : { category: "field9765", detail: "field9760", reimbursement: "field9761", tax: "field9762", note: "field9764" };
 
   const indexes = targetRows.map(rowIndex);
   for (const [position, expense] of rows.entries()) {
     const targetRow = targetRows[position];
     const index = indexes[position];
-    const categoryField = doc.getElementById(`field9758_${index}`);
+    const categoryField = doc.getElementById(`${fields.category}_${index}`);
     const openButton = categoryField?.parentElement?.querySelector<HTMLElement>("button, a, [role='button'], img");
     if (!openButton) throw new Error(`费用分类第 ${position + 1} 行没有搜索按钮。`);
     await selectExactDialogValue(openButton, kind === "travel" ? "费用分类（差旅）" : "费用分类（通用）", expense.category);
   }
   for (const [position, expense] of rows.entries()) {
     const index = indexes[position];
-    await setField(doc, `field9754_${index}`, kind === "travel" ? expense.tripRefs ?? "" : expense.incurredDate ?? "");
-    await setField(doc, `field9755_${index}`, String(expense.reimbursementAmount));
-    await setField(doc, `field9756_${index}`, String(expense.taxAmount));
-    if (expense.note !== undefined) await setField(doc, `field9759_${index}`, expense.note);
+    await setField(doc, `${fields.detail}_${index}`, kind === "travel" ? expense.tripRefs ?? "" : expense.incurredDate ?? "");
+    await setField(doc, `${fields.reimbursement}_${index}`, String(expense.reimbursementAmount));
+    await setField(doc, `${fields.tax}_${index}`, String(expense.taxAmount));
+    if (expense.note !== undefined) await setField(doc, `${fields.note}_${index}`, expense.note);
   }
   for (const [position, expense] of rows.entries()) {
     const index = indexes[position];
-    verifyField(doc, `field9754_${index}`, kind === "travel" ? expense.tripRefs ?? "" : expense.incurredDate ?? "");
-    verifyField(doc, `field9755_${index}`, String(expense.reimbursementAmount));
-    verifyField(doc, `field9756_${index}`, String(expense.taxAmount));
-    if (expense.note !== undefined) verifyField(doc, `field9759_${index}`, expense.note);
+    verifyField(doc, `${fields.detail}_${index}`, kind === "travel" ? expense.tripRefs ?? "" : expense.incurredDate ?? "");
+    verifyField(doc, `${fields.reimbursement}_${index}`, String(expense.reimbursementAmount));
+    verifyField(doc, `${fields.tax}_${index}`, String(expense.taxAmount));
+    if (expense.note !== undefined) verifyField(doc, `${fields.note}_${index}`, expense.note);
   }
 }

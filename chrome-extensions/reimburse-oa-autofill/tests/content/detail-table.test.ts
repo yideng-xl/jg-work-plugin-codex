@@ -46,6 +46,17 @@ function expenseRow(index: number, existing = ""): HTMLTableRowElement {
   return row;
 }
 
+function generalExpenseRow(index: number, existing = ""): HTMLTableRowElement {
+  const row = document.createElement("tr");
+  row.dataset.rowIndex = String(index);
+  row.innerHTML = `<td><input type="checkbox"></td>
+    <td><span id="field9765_${index}span"></span><input id="field9765_${index}" type="hidden"><button data-search="field9765_${index}">搜索</button></td>
+    <td><input id="field9760_${index}" type="hidden"></td><td><input id="field9761_${index}" value="${existing}"></td>
+    <td><input id="field9762_${index}"></td><td><span id="field9763_${index}"></span></td>
+    <td><textarea id="field9764_${index}"></textarea></td>`;
+  return row;
+}
+
 function installTable(id: string, makeRow: (index: number, existing?: string) => HTMLTableRowElement, existing = ""): HTMLTableElement {
   const section = document.createElement("section");
   section.innerHTML = `<button data-action="add">添加</button><button data-action="delete">删除</button><table id="${id}"><tbody></tbody></table>`;
@@ -179,10 +190,13 @@ describe("detail table operations", () => {
 
   it("maps the general expense date and overwrites existing rows", async () => {
     document.body.dataset.kind = "general";
-    installTable("oTable1", expenseRow, "88.00");
+    installTable("oTable2", generalExpenseRow, "88.00");
     await applyExpenses(document, "general", [expense], "overwrite");
-    expect(document.querySelectorAll("#oTable1 tr[data-row-index]")).toHaveLength(1);
-    expect((document.querySelector("#field9754_0") as HTMLInputElement).value).toBe("2099-01-10");
-    expect((document.querySelector("#field9755_0") as HTMLInputElement).value).toBe("400");
+    expect(document.querySelectorAll("#oTable2 tr[data-row-index]")).toHaveLength(1);
+    expect((document.querySelector("#field9765_0") as HTMLInputElement).value).toBe(expense.category);
+    expect((document.querySelector("#field9760_0") as HTMLInputElement).value).toBe("2099-01-10");
+    expect((document.querySelector("#field9761_0") as HTMLInputElement).value).toBe("400");
+    expect((document.querySelector("#field9762_0") as HTMLInputElement).value).toBe("0");
+    expect((document.querySelector("#field9764_0") as HTMLTextAreaElement).value).toBe("测试备注");
   });
 });

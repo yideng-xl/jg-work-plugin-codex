@@ -34,6 +34,7 @@ describe("inspectPage", () => {
     expect(inspectPage(makeOaDocument({ kind: "general" }))).toMatchObject({
       supported: true,
       kind: "general",
+      requestNumber: "JSBX202600000001",
     });
   });
 });

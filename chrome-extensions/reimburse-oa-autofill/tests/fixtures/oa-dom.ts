@@ -13,12 +13,17 @@ export function makeOaDocument(options: {
     includeTables = true,
   } = options;
   const typeText = kind === "travel" ? "差旅" : "通用";
-  const detail = includeTables ? `
+  const travelDetail = includeTables && kind === "travel" ? `
     <section><h2>行程明细</h2><table id="oTable0"><tbody>
       <tr class="data-row"><td>1</td><td><input id="field9760_0" value="${tripValue}"></td><td><input id="field9761_0"></td></tr>
     </tbody></table></section>
     <section><h2>报销费用明细</h2><table id="oTable1"><tbody>
       <tr class="data-row"><td>1</td><td><input id="field9758_0" type="hidden"><input id="field15378_0" type="hidden" value="28"></td><td><input id="field9755_0" value="${expenseValue}"></td></tr>
+      <tr class="total"><td>合计</td><td>0.00</td></tr>
+    </tbody></table></section>` : "";
+  const generalDetail = includeTables && kind === "general" ? `
+    <section><h2>报销金额明细</h2><table id="oTable2"><tbody>
+      <tr class="data-row"><td>1</td><td><input id="field9765_0" type="hidden"></td><td><input id="field9760_0" type="hidden"></td><td><input id="field9761_0" value="${expenseValue}"></td></tr>
       <tr class="total"><td>合计</td><td>0.00</td></tr>
     </tbody></table></section>` : "";
   const html = `<!doctype html><html><body>
@@ -43,7 +48,7 @@ export function makeOaDocument(options: {
       <tr><td>出差申请记录</td><td><input id="field13685"></td></tr>
       <tr><td>报销付款日期</td><td><input id="field9782"></td></tr>
     </table>
-    ${detail}
+    ${travelDetail}${generalDetail}
   </body></html>`;
   return new DOMParser().parseFromString(html, "text/html");
 }

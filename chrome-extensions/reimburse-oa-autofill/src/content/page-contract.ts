@@ -23,8 +23,15 @@ export const OA_FIELDS = {
 
 export const OA_TABLES = {
   trips: "oTable0",
-  expenses: "oTable1",
+  travelExpenses: "oTable1",
+  generalExpenses: "oTable2",
 } as const;
+
+export function expenseTable(doc: Document, kind: ReimbursementKind | undefined): Element | null {
+  if (kind === "travel") return doc.getElementById(OA_TABLES.travelExpenses);
+  if (kind === "general") return doc.getElementById(OA_TABLES.generalExpenses);
+  return null;
+}
 
 function pageText(doc: Document): string {
   return doc.body?.textContent?.replace(/\s+/g, " ").trim() ?? "";
@@ -78,13 +85,14 @@ function detectKind(doc: Document): ReimbursementKind | undefined {
 export function inspectPage(doc: Document): PageInspection {
   const text = pageText(doc);
   const requestNumber = valueBesideLabel(doc, "报销单号");
-  const expenseTable = doc.getElementById(OA_TABLES.expenses);
+  const kind = detectKind(doc);
+  const detailTable = expenseTable(doc, kind);
   const tripTable = doc.getElementById(OA_TABLES.trips);
   const supported = text.includes("技术报销")
     && text.includes("报销单号")
     && Boolean(requestNumber)
     && Boolean(doc.getElementById(OA_FIELDS.title) || doc.getElementById(OA_FIELDS.requestNumber))
-    && Boolean(expenseTable);
+    && Boolean(detailTable);
 
   const labels: Partial<Record<keyof typeof OA_FIELDS, string>> = {
     title: "标题", requestNumber: "报销单号", applicant: "申请人", fillDate: "填报日期",
@@ -108,7 +116,6 @@ export function inspectPage(doc: Document): PageInspection {
     };
   }
 
-  const kind = detectKind(doc);
   return {
     supported: Boolean(kind),
     reason: kind ? undefined : "无法识别页面中的报销类型。",
@@ -116,6 +123,6 @@ export function inspectPage(doc: Document): PageInspection {
     requestNumber,
     readonlyFields,
     tripHasData: tableHasData(tripTable),
-    expenseHasData: tableHasData(expenseTable),
+    expenseHasData: tableHasData(detailTable),
   };
 }
