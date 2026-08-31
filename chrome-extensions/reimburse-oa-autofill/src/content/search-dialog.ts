@@ -1,3 +1,5 @@
+import { setControlledValue } from "./dom-events";
+
 export class SearchSelectionError extends Error {
   constructor(message: string) {
     super(message);
@@ -42,6 +44,46 @@ function exactRows(dialog: HTMLElement, value: string): HTMLTableRowElement[] {
   );
 }
 
+function normalizedText(element: Element): string {
+  return element.textContent?.replace(/\s+/g, "") ?? "";
+}
+
+function preferRendered<T extends HTMLElement>(elements: T[]): T | undefined {
+  return elements.find((element) => element.getClientRects().length > 0) ?? elements.at(-1);
+}
+
+function findSearchControls(dialog: HTMLElement): {
+  input: HTMLInputElement;
+  button: HTMLButtonElement;
+} | undefined {
+  const inputs = Array.from(dialog.querySelectorAll<HTMLInputElement>("input[type='text'], input.ant-input"));
+  const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>("button"))
+    .filter((button) => normalizedText(button) === "搜索");
+  const input = preferRendered(inputs);
+  const button = preferRendered(buttons);
+  return input && button ? { input, button } : undefined;
+}
+
+function waitForExactRows(dialog: HTMLElement, value: string, timeoutMs = 5000): Promise<HTMLTableRowElement[]> {
+  const current = exactRows(dialog, value);
+  if (current.length > 0) return Promise.resolve(current);
+
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      const rows = exactRows(dialog, value);
+      if (rows.length === 0) return;
+      clearTimeout(timeout);
+      observer.disconnect();
+      resolve(rows);
+    });
+    const timeout = setTimeout(() => {
+      observer.disconnect();
+      resolve(exactRows(dialog, value));
+    }, timeoutMs);
+    observer.observe(dialog, { childList: true, subtree: true, characterData: true });
+  });
+}
+
 function waitForResultRows(dialog: HTMLElement, value: string, timeoutMs = 5000): Promise<HTMLTableRowElement[]> {
   const inspect = () => ({
     all: dialog.querySelectorAll("tbody tr").length,
@@ -73,7 +115,16 @@ export async function selectExactDialogValue(
 ): Promise<void> {
   openButton.click();
   const dialog = await waitForDialog(openButton.ownerDocument, dialogTitle);
-  const rows = await waitForResultRows(dialog, value);
+  let rows = await waitForResultRows(dialog, value);
+
+  if (rows.length === 0) {
+    const controls = findSearchControls(dialog);
+    if (controls) {
+      setControlledValue(controls.input, value);
+      controls.button.click();
+      rows = await waitForExactRows(dialog, value);
+    }
+  }
 
   if (rows.length !== 1) {
     throw new SearchSelectionError(`搜索值‘${value}’的精确结果数为 ${rows.length}，已停止填写。`);

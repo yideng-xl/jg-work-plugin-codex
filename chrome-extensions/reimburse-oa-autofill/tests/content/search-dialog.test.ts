@@ -36,6 +36,38 @@ function delayedSearchFixture(value: string): { button: HTMLButtonElement; click
   return { button, clicks };
 }
 
+function paginatedSearchFixture(): {
+  button: HTMLButtonElement;
+  clicks: ReturnType<typeof vi.fn>;
+  searchedValues: string[];
+} {
+  const button = document.createElement("button");
+  const clicks = vi.fn();
+  const searchedValues: string[] = [];
+  button.addEventListener("click", () => {
+    const dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+    dialog.innerHTML = `
+      <h2>费用分类（通用）</h2>
+      <input class="ant-input" type="text">
+      <button class="ant-btn ant-btn-primary">搜 索</button>
+      <table><tbody><tr><td>办公费</td></tr></tbody></table>`;
+    const input = dialog.querySelector<HTMLInputElement>("input")!;
+    dialog.querySelector("button")!.addEventListener("click", () => {
+      searchedValues.push(input.value);
+      setTimeout(() => {
+        const row = document.createElement("tr");
+        row.innerHTML = "<td>物业费</td>";
+        row.addEventListener("click", clicks);
+        dialog.querySelector("tbody")!.replaceChildren(row);
+      }, 20);
+    });
+    document.body.append(dialog);
+  });
+  document.body.append(button);
+  return { button, clicks, searchedValues };
+}
+
 describe("selectExactDialogValue", () => {
   beforeEach(() => {
     document.body.replaceChildren();
@@ -50,6 +82,13 @@ describe("selectExactDialogValue", () => {
   it("waits for asynchronously loaded exact results", async () => {
     const { button, clicks } = delayedSearchFixture("差旅费-交通费");
     await selectExactDialogValue(button, "费用分类（差旅）", "差旅费-交通费");
+    expect(clicks).toHaveBeenCalledOnce();
+  });
+
+  it("searches the dialog when the exact value is on another page", async () => {
+    const { button, clicks, searchedValues } = paginatedSearchFixture();
+    await selectExactDialogValue(button, "费用分类（通用）", "物业费");
+    expect(searchedValues).toEqual(["物业费"]);
     expect(clicks).toHaveBeenCalledOnce();
   });
 
