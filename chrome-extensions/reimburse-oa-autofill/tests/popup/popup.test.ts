@@ -30,7 +30,7 @@ describe("renderPopup", () => {
         applicationDate: "2026-07-29", applicant: "OA 用户",
         details: [{ label: "申请日期", value: "2026-07-29" }, { label: "出差事由", value: "项目交流" }],
       },
-    })).toContain("申请日期：2026-07-29");
+    })).toContain("申请日期【2026-07-29】");
   });
   it("shows workbook preview and independent existing-data choices", () => {
     const root = document.createElement("main");
@@ -76,10 +76,10 @@ describe("renderPopup", () => {
       },
     };
     renderPopup(root, completed);
-    expect(root.textContent).toContain("已选择的出差申请记录");
+    expect(root.textContent).toContain("申请记录编号");
     expect(root.textContent).toContain("申请日期");
     expect(root.textContent).toContain("2026-07-29");
-    expect(root.textContent).toContain("出差事由");
-    expect(root.textContent).toContain("项目交流");
+    expect(root.textContent).toContain("计划出差行程明细未读取到");
+    expect(root.textContent).not.toContain("项目交流");
   });
 });

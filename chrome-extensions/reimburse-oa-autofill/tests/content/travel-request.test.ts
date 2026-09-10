@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   chooseNearestPriorCandidate,
   isTravelRequestRow,
   travelRequestCandidateFromRow,
+  selectTravelRequest,
   type TravelRequestCandidate,
 } from "../../src/content/travel-request";
 
@@ -14,6 +15,38 @@ const row = (date: string, applicant = "测试用户"): TravelRequestCandidate =
 });
 
 describe("chooseNearestPriorCandidate", () => {
+  it("selects once without triggering duplicate OA linkage", async () => {
+    document.body.innerHTML = `<div id="field13685span"><button>搜索</button><span></span></div><input id="field13685">
+      <table><tr><th>申请记录</th><th>申请日期</th><th>申请人</th></tr>
+      <tr id="candidate"><td stsdata="CCSQ209901010001">CCSQ209901010001</td><td>2099-01-01</td><td>测试用户</td></tr></table>`;
+    const candidate = document.getElementById("candidate")!;
+    vi.spyOn(candidate, "getClientRects").mockImplementation(() => (candidate.isConnected ? [{}] : []) as unknown as DOMRectList);
+    const onSelect = vi.fn(() => {
+      (document.getElementById("field13685") as HTMLInputElement).value = "record-id";
+      document.querySelector("#field13685span span")!.textContent = "CCSQ209901010001";
+      candidate.remove();
+    });
+    candidate.addEventListener("click", onSelect);
+    candidate.addEventListener("dblclick", onSelect);
+    const result = await selectTravelRequest(document, "2099-01-10", "测试用户");
+    expect(result.status).toBe("selected");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    document.body.replaceChildren();
+  });
+  it("reads the separate fixed header and rendered applicant name in OA", () => {
+    const container = document.createElement("div");
+    container.className = "ant-table";
+    container.innerHTML = `<div class="ant-table-header"><table><thead><tr>
+      <th>申请记录编号</th><th>申请日期</th><th>申请人</th></tr></thead></table></div>
+      <div class="ant-table-body"><table><tbody><tr>
+      <td stsdata="CCSQ209901070001">CCSQ209901070001</td><td>2099-01-04</td>
+      <td stsdata="&lt;a&gt;测试用户&lt;/a&gt;&amp;nbsp;"><a>测试用户</a>&nbsp;</td>
+      </tr></tbody></table></div>`;
+    const candidate = travelRequestCandidateFromRow(container.querySelector("tbody tr")!);
+    expect(candidate?.applicant).toBe("测试用户");
+    expect(candidate?.selection.details).toContainEqual({ label: "申请日期", value: "2099-01-04" });
+    expect(chooseNearestPriorCandidate("2099-01-07", "测试用户", [candidate!]).status).toBe("selected");
+  });
   it("waits for real CCSQ candidate rows instead of underlying form dates", () => {
     const formRow = document.createElement("tr");
     formRow.innerHTML = "<td>填报日期</td><td>2099-01-15</td>";

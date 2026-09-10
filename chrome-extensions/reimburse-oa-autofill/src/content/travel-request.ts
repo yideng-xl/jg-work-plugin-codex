@@ -47,7 +47,9 @@ function directCells(row: HTMLTableRowElement): HTMLTableCellElement[] {
 function headerLabels(row: HTMLTableRowElement): string[] {
   const table = row.closest("table");
   if (!table) return [];
-  const rows = Array.from(table.querySelectorAll<HTMLTableRowElement>("tr"));
+  // OA 固定表头位于独立 table，限定在同一个表格组件内查找。
+  const scope = table.closest(".ant-table") ?? table;
+  const rows = Array.from(scope.querySelectorAll<HTMLTableRowElement>("tr"));
   const rowIndex = rows.indexOf(row);
   const candidates = rows.slice(0, Math.max(0, rowIndex)).reverse();
   const header = candidates.find((candidate) => {
@@ -62,7 +64,8 @@ export function travelRequestCandidateFromRow(row: HTMLTableRowElement): TravelR
   const headers = headerLabels(row);
   const details: TravelRequestDetail[] = cells.map((cell, index) => ({
     label: headers[index] || `第 ${index + 1} 列`,
-    value: cell.getAttribute("stsdata")?.trim() || cell.textContent?.replace(/\s+/g, " ").trim() || "",
+    // 申请人的 stsdata 是链接 HTML；姓名使用已渲染的单元格文本。
+    value: cell.textContent?.replace(/\s+/g, " ").trim() || cell.getAttribute("stsdata")?.trim() || "",
   })).filter((item) => item.value);
   const valueFor = (label: string) => details.find((item) => item.label.replace(/\s+/g, "").includes(label))?.value ?? "";
   const text = row.textContent?.trim() ?? "";
@@ -130,18 +133,27 @@ export async function selectTravelRequest(
     const cell = choice.candidate.row.querySelector<HTMLElement>("td");
     if (!cell) throw new Error("出差申请记录候选行缺少选择单元格。");
     cell.click();
-    cell.click();
-    cell.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: doc.defaultView }));
-    const field = doc.getElementById("field13685");
     const deadline = Date.now() + 2000;
+    const fallbackAt = Date.now() + 750;
+    let doubleClicked = false;
     while (Date.now() < deadline) {
-      if (field instanceof HTMLInputElement && field.value) {
+      const field = doc.getElementById("field13685");
+      const label = doc.getElementById("field13685span")?.textContent ?? "";
+      const selectedCode = choice.candidate.selection.code;
+      if (field instanceof HTMLInputElement && field.value
+        && selectedCode && label.includes(selectedCode)
+        && !choice.candidate.row.getClientRects().length) {
         return {
           status: "selected",
           label: choice.candidate.selection.code,
           applicationDate: choice.candidate.selection.applicationDate,
           selection: choice.candidate.selection,
         };
+      }
+      // 单击已经关闭弹窗时不再触发选择，避免 OA 重复执行行程联动。
+      if (!doubleClicked && Date.now() >= fallbackAt && choice.candidate.row.getClientRects().length) {
+        cell.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, view: doc.defaultView }));
+        doubleClicked = true;
       }
       await new Promise((resolve) => setTimeout(resolve, 25));
     }

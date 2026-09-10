@@ -10,6 +10,7 @@ import { applyExpenses, applyTrips, tripRowIndexes, waitForLinkedTripRows } from
 import { fieldValueMatches, setOaFieldValue } from "./oa-field-api";
 import { inspectPage, OA_FIELDS } from "./page-contract";
 import { selectTravelRequest } from "./travel-request";
+import { loadSelectedTravelPlan } from "./travel-plan";
 
 const EDITABLE_FIELDS: Array<[keyof HeaderData, keyof typeof OA_FIELDS]> = [
   ["travelDays", "travelDays"],
@@ -139,6 +140,9 @@ export async function fillReimbursementPage(
   }
 
   const oaTotals = await waitForTotals(doc);
+  if (selectedTravelRequest) {
+    try { await loadSelectedTravelPlan(doc, selectedTravelRequest); } catch { /* 展示未读取提示，保留填单结果。 */ }
+  }
   const match = moneyMatches(excelTotals, oaTotals);
   if (!match) fields.push({ field: "totals", status: "error", message: "Excel 与 OA 合计不一致。" });
   return { ok: match, fields, totals: { excel: excelTotals, oa: oaTotals, match }, travelRequest: selectedTravelRequest };

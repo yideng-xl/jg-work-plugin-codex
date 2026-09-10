@@ -97,11 +97,18 @@ export async function waitForLinkedTripRows(doc: Document, before: Set<string>):
   const table = doc.getElementById(OA_TABLES.trips);
   if (!table) throw new Error("当前 OA 页面没有行程明细表。");
   const deadline = Date.now() + 3000;
+  let lastIndexes = "";
+  let stableSince = Date.now();
   while (Date.now() < deadline) {
     const indexes = dataRows(table)
       .filter((row) => rowHasData(row) && !before.has(rowIndex(row)))
       .map(rowIndex);
-    if (indexes.length) return new Set(indexes);
+    const signature = indexes.join(",");
+    if (signature !== lastIndexes) {
+      lastIndexes = signature;
+      stableSince = Date.now();
+    }
+    if (indexes.length && Date.now() - stableSince >= 300) return new Set(indexes);
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
   throw new Error("选择出差申请后未生成行程明细。");

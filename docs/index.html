@@ -34,11 +34,11 @@
   <main id="top">
     <section class="hero">
       <div>
-        <p class="eyebrow">Chrome 插件 · v0.1.4</p>
+        <p class="eyebrow">Chrome 插件 · v0.1.7</p>
         <h1>把报销终稿 Excel<br>填入 OA 技术报销页</h1>
         <p class="lead">支持差旅和其他报销。插件负责填写，附件、检查、保存和提交由用户完成。</p>
         <div class="actions">
-          <a class="button primary" href="downloads/OA报销自动填写-v0.1.4.zip" download>下载插件</a>
+          <a class="button primary" href="downloads/OA报销自动填写-v0.1.7.zip" download>下载插件</a>
           <a class="button secondary" href="#install">查看安装方法</a>
         </div>
       </div>
@@ -109,12 +109,13 @@
       </div>
       <div class="rule-card">
         <h3>出差申请记录怎么选</h3>
-        <p>插件按第 1 段行程的出发日期，选择该日期之前最近的一条申请记录。同日申请不选。</p>
+        <p>插件先按当前 OA 报销人筛选，再按第 1 段行程的出发日期，选择该日期之前最近的一条申请记录。同日申请不选。</p>
         <p>最近日期有多条记录，或没有符合条件的记录时，插件保留为空，由用户手动选择。</p>
         <p>OA 选择记录后可能自动生成第 1 行行程。插件会复用该行，再补足剩余行程。</p>
+        <p>完成提示按行显示申请记录编号、申请日期和申请人。计划行程另起一行，依次标为“行程1、行程2……”，显示出发日期、出发地、目的地、回程日期和事由。未读取到计划行程时会提示打开所选申请核对。</p>
       </div>
       <div class="shots-two completion-shots">
-        <figure class="manual-shot"><img src="images/05-completion-alert.png" alt="插件填写完成后的 Chrome 提示"><figcaption>完成提示会显示出差申请日期，并提醒人工检查。</figcaption></figure>
+        <figure class="manual-shot"><img src="images/05-completion-alert.png" alt="插件填写完成后的 Chrome 提示"><figcaption>完成后请核对所选申请和计划行程。</figcaption></figure>
         <figure class="manual-shot"><img src="images/06-fill-result.png" alt="插件填写结果和 OA 已填明细"><figcaption>回到 OA 检查申请记录、行程、费用明细和金额。</figcaption></figure>
       </div>
     </section>
@@ -150,7 +151,7 @@
   </main>
 
   <footer>
-    <p>OA 报销自动填写 · v0.1.4</p>
+    <p>OA 报销自动填写 · v0.1.7</p>
     <a href="https://github.com/yideng-xl/jg-work-plugin-codex">查看 GitHub 仓库</a>
   </footer>
   <script src="manual.js?v=lightbox-1"></script>

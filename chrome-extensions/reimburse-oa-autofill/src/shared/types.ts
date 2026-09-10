@@ -28,6 +28,7 @@ export interface TravelRequestDetail {
 }
 
 export interface TravelRequestSelection {
+  plannedTrips?: Array<{ departureDate: string; from: string; returnDate: string; to: string; reason: string }>;
   code?: string;
   applicationDate: string;
   applicant: string;
