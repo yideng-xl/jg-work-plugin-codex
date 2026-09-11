@@ -1,8 +1,17 @@
+// 兼容原首页的 Chrome 操作手册章节链接。
+if (/\/(?:index\.html)?$/.test(location.pathname)
+  && ["#install", "#use", "#check", "#faq"].includes(location.hash)) {
+  location.replace("oa.html" + location.hash);
+}
+
 const shots = document.querySelectorAll(".manual-shot img");
 
 const lightbox = document.createElement("div");
 lightbox.className = "lightbox";
 lightbox.setAttribute("aria-hidden", "true");
+lightbox.setAttribute("role", "dialog");
+lightbox.setAttribute("aria-modal", "true");
+lightbox.setAttribute("aria-label", "图片预览");
 lightbox.innerHTML = `
   <button class="lightbox-close" type="button" aria-label="关闭图片预览">×</button>
   <img alt="">
@@ -51,5 +60,7 @@ lightbox.addEventListener("click", (event) => {
   if (event.target === lightbox) closeLightbox();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && lightbox.classList.contains("open")) closeLightbox();
+  if (!lightbox.classList.contains("open")) return;
+  if (event.key === "Escape") closeLightbox();
+  if (event.key === "Tab") { event.preventDefault(); closeButton.focus(); }
 });

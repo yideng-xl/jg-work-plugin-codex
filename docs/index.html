@@ -1,159 +1,115 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="OA 报销自动填写 Chrome 插件安装和操作手册">
-  <title>OA 报销自动填写｜操作手册</title>
-  <link rel="stylesheet" href="styles.css?v=lightbox-1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="报销操作手册：发票准备、发票自动整理与 OA 上传。发票准备。">
+<title>发票准备｜报销操作手册</title>
+<link rel="stylesheet" href="styles.css?v=workflow-3">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="返回顶部"><span>OA</span> 报销自动填写</a>
-    <nav aria-label="页面导航">
-      <a href="#install">安装</a>
-      <a href="#use">使用</a>
-      <a href="#check">检查</a>
-      <a href="#faq">常见问题</a>
-      <a href="workbuddy.html">WorkBuddy 版</a>
-    </nav>
-  </header>
-
-  <div class="stage-switch" aria-label="报销流程阶段">
-    <a href="prepare.html"><span>第一步</span>整理票据并生成终稿</a>
-    <a class="active" href="index.html"><span>第二步</span>插件填入 OA</a>
-  </div>
-
-  <div class="assistant-switch" aria-label="相关工具手册">
-    <span>相关手册</span>
-    <a href="prepare.html">Codex 整理票据</a>
-    <a href="workbuddy.html">WorkBuddy 整理票据</a>
-    <a class="active" href="index.html">Chrome 填入 OA</a>
-  </div>
-
-  <main id="top">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Chrome 插件 · v0.1.7</p>
-        <h1>把报销终稿 Excel<br>填入 OA 技术报销页</h1>
-        <p class="lead">支持差旅和其他报销。插件负责填写，附件、检查、保存和提交由用户完成。</p>
-        <div class="actions">
-          <a class="button primary" href="downloads/OA报销自动填写-v0.1.7.zip" download>下载插件</a>
-          <a class="button secondary" href="#install">查看安装方法</a>
-        </div>
-      </div>
-      <aside class="scope-card" aria-label="支持范围">
-        <h2>支持的 Excel</h2>
-        <code>09-终稿-OA差旅报销明细.xlsx</code>
-        <code>09-终稿-OA报销金额明细.xlsx</code>
-        <p>仅支持 OA“处理 - 技术报销”完整表单。</p>
-      </aside>
-    </section>
-
-    <section class="notice">
-      <strong>使用边界</strong>
-      <span>插件不会上传附件、保存或提交报销单，也不会保存 OA 账号、密码和票据内容。</span>
-    </section>
-
-    <section id="install" class="section">
-      <div class="section-heading">
-        <p class="step-label">01</p>
-        <div><h2>安装插件</h2><p>下载 ZIP，解压后加载到 Chrome。</p></div>
-      </div>
-      <ol class="steps">
-        <li><span>1</span><div><h3>解压安装包</h3><p>保留完整目录。目录中应能直接看到 <code>manifest.json</code>。</p></div></li>
-        <li><span>2</span><div><h3>打开扩展程序页</h3><p>在 Chrome 地址栏输入 <code>chrome://extensions/</code>。</p></div></li>
-        <li><span>3</span><div><h3>加载插件</h3><p>打开“开发者模式”，点击“加载已解压的扩展程序”，选择解压目录。</p></div></li>
-        <li><span>4</span><div><h3>固定到工具栏</h3><p>在扩展程序菜单中固定“OA 报销自动填写”。</p></div></li>
-      </ol>
-      <figure class="manual-shot wide"><img src="images/01-chrome-extensions.png" alt="Chrome 扩展程序页中的 OA 报销自动填写插件"><figcaption>打开开发者模式，加载或重新加载插件。</figcaption></figure>
-    </section>
-
-    <section id="use" class="section alt">
-      <div class="section-heading">
-        <p class="step-label">02</p>
-        <div><h2>填写报销单</h2><p>先打开 OA 完整表单，再从插件选择终稿 Excel。</p></div>
-      </div>
-      <div class="flow-grid">
-        <article><b>1</b><h3>打开 OA</h3><p>进入“处理 - 技术报销”页面，确认报销类型与 Excel 一致。</p></article>
-        <article><b>2</b><h3>选择 Excel</h3><p>点击插件图标，选择对应的 <code>09-终稿-OA*.xlsx</code>。</p></article>
-        <article><b>3</b><h3>检查预览</h3><p>核对类型、申请人、行程数、费用行数和金额。</p></article>
-        <article><b>4</b><h3>选择处理方式</h3><p>行程和费用分别选择“覆盖”“只新增”或“取消”。</p></article>
-        <article><b>5</b><h3>填入 OA</h3><p>点击“填入 OA”，等待完成提示。填写过程中不要操作页面。</p></article>
-        <article><b>6</b><h3>人工检查</h3><p>核对申请记录、明细和合计，手动上传附件并提交。</p></article>
-      </div>
-      <div class="shots-two">
-        <figure class="manual-shot"><img src="images/02-oa-form.png" alt="OA 处理技术报销完整表单"><figcaption>进入“处理 - 技术报销”完整页面。</figcaption></figure>
-        <figure class="manual-shot popup-shot"><img src="images/03-select-excel.png" alt="OA 报销自动填写插件选择 Excel 界面"><figcaption>点击插件图标，选择终稿 Excel。</figcaption></figure>
-      </div>
-      <figure class="manual-shot preview-shot"><img src="images/04-file-preview.png" alt="插件读取 Excel 后的文件预览"><figcaption>选择文件后，检查类型、申请人、明细行数和金额。</figcaption></figure>
-    </section>
-
-    <section class="section">
-      <div class="section-heading">
-        <p class="step-label">03</p>
-        <div><h2>明细处理规则</h2><p>行程明细和费用明细分别判断，互不影响。</p></div>
-      </div>
-      <div class="choice-grid">
-        <article><h3>覆盖</h3><p>清除该表已有数据，再按 Excel 填写。使用前确认旧数据不再需要。</p></article>
-        <article><h3>只新增</h3><p>保留已有数据，在后面增加 Excel 明细。</p></article>
-        <article><h3>取消</h3><p>本次跳过该表，不做修改。</p></article>
-      </div>
-      <figure class="manual-shot modes-shot"><img src="images/07-detail-modes.png" alt="行程明细和费用明细的覆盖只新增取消选项"><figcaption>行程明细和费用明细分别选择处理方式。</figcaption></figure>
-    </section>
-
-    <section class="section alt">
-      <div class="section-heading">
-        <p class="step-label">04</p>
-        <div><h2>差旅报销</h2><p>插件会填写行程、费用，并尝试选择出差申请记录。</p></div>
-      </div>
-      <div class="rule-card">
-        <h3>出差申请记录怎么选</h3>
-        <p>插件先按当前 OA 报销人筛选，再按第 1 段行程的出发日期，选择该日期之前最近的一条申请记录。同日申请不选。</p>
-        <p>最近日期有多条记录，或没有符合条件的记录时，插件保留为空，由用户手动选择。</p>
-        <p>OA 选择记录后可能自动生成第 1 行行程。插件会复用该行，再补足剩余行程。</p>
-        <p>完成提示按行显示申请记录编号、申请日期和申请人。计划行程另起一行，依次标为“行程1、行程2……”，显示出发日期、出发地、目的地、回程日期和事由。未读取到计划行程时会提示打开所选申请核对。</p>
-      </div>
-      <div class="shots-two completion-shots">
-        <figure class="manual-shot"><img src="images/05-completion-alert.png" alt="插件填写完成后的 Chrome 提示"><figcaption>完成后请核对所选申请和计划行程。</figcaption></figure>
-        <figure class="manual-shot"><img src="images/06-fill-result.png" alt="插件填写结果和 OA 已填明细"><figcaption>回到 OA 检查申请记录、行程、费用明细和金额。</figcaption></figure>
-      </div>
-    </section>
-
-    <section id="check" class="section">
-      <div class="section-heading">
-        <p class="step-label">05</p>
-        <div><h2>提交前检查</h2><p>完成提示只代表字段已经写入，报销单仍需人工确认。</p></div>
-      </div>
-      <ul class="checklist">
-        <li>申请人和报销类型正确。</li>
-        <li>差旅报销的出差申请记录正确。</li>
-        <li>行程数量、日期、时间、地点和住宿天数正确。</li>
-        <li>费用分类和行程编号正确。</li>
-        <li>费用合计、税额合计、报销总金额与 Excel 一致。</li>
-        <li>所需附件已经手动上传。</li>
-      </ul>
-    </section>
-
-    <section id="faq" class="section alt">
-      <div class="section-heading">
-        <p class="step-label">06</p>
-        <div><h2>常见问题</h2><p>遇到错误时，插件会停止填写并显示原因。</p></div>
-      </div>
-      <div class="faq">
-        <details><summary>提示“当前页面不支持填写”</summary><p>确认当前页面是“处理 - 技术报销”的完整表单。列表页和创建页暂不支持。</p></details>
-        <details><summary>提示“Excel 报销类型与 OA 页面不一致”</summary><p>检查 OA 的报销类型，重新选择同类型的终稿 Excel。</p></details>
-        <details><summary>搜索结果为 0 或存在多条完全一致结果</summary><p>插件会停止，避免选错费用分类或申请记录。请先在 OA 中核对可选项。</p></details>
-        <details><summary>提示“Excel 与 OA 合计不一致”</summary><p>检查费用明细是否全部写入，以及金额、税额和费用分类是否正确。</p></details>
-        <details><summary>插件没有响应或提示连接失败</summary><p>到扩展程序页重新加载插件，刷新 OA 页面，再重新选择 Excel。</p></details>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>OA 报销自动填写 · v0.1.7</p>
-    <a href="https://github.com/yideng-xl/jg-work-plugin-codex">查看 GitHub 仓库</a>
-  </footer>
-  <script src="manual.js?v=lightbox-1"></script>
-</body>
-</html>
+<a class="skip-link" href="#main">跳到正文</a>
+<header class="topbar"><a class="brand" href="index.html"><span aria-hidden="true">报</span>报销操作手册</a><a class="repo-link" href="https://github.com/yideng-xl/jg-work-plugin-codex">GitHub 仓库 ↗</a>
+</header>
+<div class="workflow-wrap">
+<nav class="workflow" aria-label="报销流程"><a href="index.html" class="stage active" aria-current="step"><span class="stage-number">01</span><span><strong>发票准备</strong><small>归集本次报销材料</small></span></a><a href="codex.html" class="stage"><span class="stage-number">02</span><span><strong>发票自动整理</strong><small>Codex / WorkBuddy</small></span></a><a href="oa.html" class="stage"><span class="stage-number">03</span><span><strong>OA 上传</strong><small>Chrome 插件辅助填写</small></span></a>
+</nav>
+</div>
+<nav class="page-nav" aria-label="本页目录"><a href="#materials">材料清单</a><a href="#type">报销信息</a><a href="#choose">开始整理</a>
+</nav>
+<main id="main">
+<section class="hero">
+<div>
+<p class="eyebrow">第一步 / 发票准备</p>
+<h1>备齐本次报销材料<br>放入同一个文件夹</h1>
+<p class="lead">收齐发票、行程和支付凭证，确认报销类型与报销人。材料准备好后，选择 Codex 或 WorkBuddy 自动整理。</p>
+<div class="actions"><a class="button primary" href="#materials">查看准备清单</a><a class="button secondary" href="#choose">材料已备齐，开始整理 →</a>
+</div>
+</div>
+<aside class="scope-card">
+<p class="eyebrow">本步完成后得到</p>
+<h2>一个报销文件夹</h2><code>本次报销 / 原始发票与附件</code>
+<p>一个文件夹对应一次报销。差旅和其他报销分别准备。</p>
+<div class="mini-flow"><span class="current">原始发票</span><span>行程附件</span><span>支付凭证</span>
+</div>
+</aside>
+</section>
+<section id="materials" class="section">
+<div class="section-heading">
+<p class="step-label">01</p>
+<div>
+<h2>收齐原始材料</h2>
+<p>原始文件直接放入文件夹，保留完整票面和附件。</p>
+</div>
+</div>
+<div class="choice-grid">
+<article>
+<h3>发票材料</h3>
+<p>电子发票 PDF、XML、OFD、发票压缩包、铁路或航空电子客票。</p>
+</article>
+<article>
+<h3>行程与业务附件</h3>
+<p>打车行程单、住宿水单、订阅回执、费用明细等。</p>
+</article>
+<article>
+<h3>支付凭证</h3>
+<p>付款截图、银行卡扣款记录或其他金额依据。</p>
+</article>
+</div>
+<figure class="manual-shot folder-shot"><img src="images/10-source-folder.png" alt="同一报销文件夹中的原始票据和附件" loading="lazy"><figcaption>把本次报销的发票和附件放在一起。</figcaption>
+</figure>
+</section>
+<section id="type" class="section">
+<div class="section-heading">
+<p class="step-label">02</p>
+<div>
+<h2>确认报销类型和报销人</h2>
+<p>整理时提供文件夹位置、报销类型和实际报销人姓名。</p>
+</div>
+</div>
+<div class="prompt-grid">
+<article class="prompt-card">
+<p class="prompt-label">差旅报销</p>
+<h3>有跨城出差行程</h3>
+<p>包含跨城交通、住宿、出差期间交通和补贴。</p>
+</article>
+<article class="prompt-card">
+<p class="prompt-label">其他报销</p>
+<h3>不需要差旅行程</h3>
+<p>包含 AI 订阅、市内交通、办公费用等。</p>
+</article>
+</div>
+<ul class="checklist">
+<li>本次报销的发票与附件已放在同一文件夹。</li>
+<li>差旅与其他报销已经分开。</li>
+<li>原始文件可打开，票面内容完整。</li>
+<li>已确定本次实际报销人。</li>
+</ul>
+</section>
+<section id="choose" class="section">
+<div class="section-heading">
+<p class="step-label">03</p>
+<div>
+<h2>进入第二步：发票自动整理</h2>
+<p>两种工具任选一种，均先生成摘要，经你确认后生成终稿。</p>
+</div>
+</div>
+<div class="tool-grid">
+<article class="tool-card">
+<p class="eyebrow">第二步 · 方式一</p>
+<h2>Codex 版</h2>
+<p>安装 JG Work 插件，在 Codex 中提供报销文件夹，核对摘要后生成终稿。</p><a class="button primary" href="codex.html">使用 Codex 整理 →</a>
+</article>
+<article class="tool-card">
+<p class="eyebrow">第二步 · 方式二</p>
+<h2>WorkBuddy 版</h2>
+<p>导入 JG报销助理专家包，在 WorkBuddy 中提供报销文件夹，核对摘要后生成终稿。</p><a class="button primary" href="workbuddy.html">使用 WorkBuddy 整理 →</a>
+</article>
+</div>
+</section>
+</main>
+<footer>
+<p>报销操作手册 · 准备 / 整理 / 上传</p><a href="#main">返回顶部 ↑</a>
+</footer>
+<script src="manual.js?v=workflow-3"></script>
+</body></html>

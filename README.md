@@ -117,7 +117,7 @@ Codex 读回已经确认的摘要，再生成以 `09-终稿-` 开头的文件：
 - 不保存 OA 账号、密码或票据内容；
 - 不自动点击提交，由用户检查后手动提交。
 
-构建说明见 [Chrome 插件 README](chrome-extensions/reimburse-oa-autofill/README.md)。使用者可直接查看 [在线操作手册](https://yideng-xl.github.io/jg-work-plugin-codex/)。
+构建说明见 [Chrome 插件 README](chrome-extensions/reimburse-oa-autofill/README.md)。使用者可直接查看 [在线操作手册](https://yideng-xl.github.io/jg-work-plugin-codex/oa.html)。
 
 ## 安装
 
