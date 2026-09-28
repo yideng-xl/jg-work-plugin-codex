@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { applyExpenses, applyTrips, tripRowIndexes, waitForLinkedTripRows } from "../../src/content/detail-table";
 import type { ExpenseRow, TripRow } from "../../src/shared/types";
 
@@ -175,6 +175,34 @@ describe("detail table operations", () => {
     expect(document.querySelectorAll("#oTable0 tr[data-row-index]")).toHaveLength(2);
     expect((document.querySelector("#field9747_0") as HTMLInputElement).value).toBe("2099-01-10");
     expect((document.querySelector("#field9747_1") as HTMLInputElement).value).toBe("2099-01-12");
+  });
+
+  it("fills Excel trips when the selected request generates no actual itinerary", async () => {
+    vi.useFakeTimers();
+    try {
+      const table = installTable("oTable0", tripRow);
+      table.tBodies[0].replaceChildren();
+      const pending = waitForLinkedTripRows(document, tripRowIndexes(document));
+      await vi.advanceTimersByTimeAsync(10000);
+      const linked = await pending;
+      expect(linked.size).toBe(0);
+      await applyTrips(document, [trip, { ...trip, departureDate: "2099-01-12" }], "append", linked);
+      expect(table.querySelectorAll("tr[data-row-index]")).toHaveLength(2);
+      expect((document.getElementById("field9747_1") as HTMLInputElement).value).toBe("2099-01-12");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("detects linked rows after OA replaces the whole table", async () => {
+    const table = installTable("oTable0", tripRow);
+    table.tBodies[0].replaceChildren();
+    setTimeout(() => {
+      const replacement = table.cloneNode(true) as HTMLTableElement;
+      replacement.tBodies[0].append(tripRow(0, "2099-01-10"));
+      table.replaceWith(replacement);
+    }, 30);
+    expect(await waitForLinkedTripRows(document, new Set())).toEqual(new Set(["0"]));
   });
 
   it("maps travel expense fields and selects the exact category", async () => {

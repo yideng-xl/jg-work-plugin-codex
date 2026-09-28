@@ -94,12 +94,16 @@ export function tripRowIndexes(doc: Document): Set<string> {
 }
 
 export async function waitForLinkedTripRows(doc: Document, before: Set<string>): Promise<Set<string>> {
-  const table = doc.getElementById(OA_TABLES.trips);
-  if (!table) throw new Error("当前 OA 页面没有行程明细表。");
-  const deadline = Date.now() + 3000;
+  if (!doc.getElementById(OA_TABLES.trips)) throw new Error("当前 OA 页面没有行程明细表。");
+  const deadline = Date.now() + 10000;
   let lastIndexes = "";
   let stableSince = Date.now();
   while (Date.now() < deadline) {
+    const table = doc.getElementById(OA_TABLES.trips);
+    if (!table) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      continue;
+    }
     const indexes = dataRows(table)
       .filter((row) => rowHasData(row) && !before.has(rowIndex(row)))
       .map(rowIndex);
@@ -111,7 +115,9 @@ export async function waitForLinkedTripRows(doc: Document, before: Set<string>):
     if (indexes.length && Date.now() - stableSince >= 300) return new Set(indexes);
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
-  throw new Error("选择出差申请后未生成行程明细。");
+  // OA 未带出新增行程时，交给 applyTrips 按用户选择的明细模式填写 Excel 行程。
+  if (!doc.getElementById(OA_TABLES.trips)) throw new Error("当前 OA 页面没有行程明细表。");
+  return new Set();
 }
 
 async function setField(doc: Document, id: string, value: string): Promise<void> {
