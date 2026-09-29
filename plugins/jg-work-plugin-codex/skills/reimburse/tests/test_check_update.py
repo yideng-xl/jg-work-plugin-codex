@@ -64,3 +64,36 @@ def test_upgrade_failure_is_non_blocking(monkeypatch):
     result = check_update(run)
     assert result["status"] == "check_failed"
     assert "当前版本" in result["message"]
+
+
+def test_sandbox_dns_failure_requests_network_permission(monkeypatch):
+    monkeypatch.setattr("scripts.check_update.shutil.which", lambda _: "/usr/bin/codex")
+    monkeypatch.setenv("CODEX_SANDBOX_NETWORK_DISABLED", "1")
+
+    def run(args, timeout):
+        if args[:4] == ["codex", "plugin", "marketplace", "list"]:
+            return completed(args, stdout=json.dumps([{"name": "jg-work", "path": "/tmp/jg-work"}]))
+        if args[0] == "git":
+            return completed(args, stdout="abc123\n")
+        return completed(args, returncode=1, stderr="fatal: Could not resolve host: github.com")
+
+    result = check_update(run)
+    assert result["status"] == "needs_network_permission"
+    assert "任务沙箱" in result["message"]
+
+
+def test_dns_failure_outside_sandbox_keeps_original_reason(monkeypatch):
+    monkeypatch.setattr("scripts.check_update.shutil.which", lambda _: "/usr/bin/codex")
+    monkeypatch.delenv("CODEX_SANDBOX_NETWORK_DISABLED", raising=False)
+
+    def run(args, timeout):
+        if args[:4] == ["codex", "plugin", "marketplace", "list"]:
+            return completed(args, stdout=json.dumps([{"name": "jg-work", "path": "/tmp/jg-work"}]))
+        if args[0] == "git":
+            return completed(args, stdout="abc123\n")
+        return completed(args, returncode=1, stderr="WARNING: proceeding, even though we could not create PATH aliases: Operation not permitted\nfatal: Could not resolve host: github.com")
+
+    result = check_update(run)
+    assert result["status"] == "check_failed"
+    assert "Could not resolve host" in result["message"]
+    assert "PATH aliases" not in result["message"]
